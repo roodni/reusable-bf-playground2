@@ -4,6 +4,9 @@ import solid from 'eslint-plugin-solid/configs/typescript.js';
 import * as tsParser from '@typescript-eslint/parser';
 
 export default [
+  {
+    ignores: ['dist/**'],
+  },
   js.configs.recommended,
   {
     files: ['**/*.{ts,tsx,js}'],
