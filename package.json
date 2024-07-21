@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint-fix": "eslint --fix ."
@@ -16,13 +16,13 @@
   },
   "devDependencies": {
     "@suid/vite-plugin": "^0.2.0",
+    "@types/node": "^20.14.11",
     "@typescript-eslint/parser": "^7.16.1",
     "eslint": "^8.57.0",
     "eslint-plugin-solid": "^0.14.1",
     "globals": "^15.8.0",
     "typescript": "^5.2.2",
     "vite": "^5.3.1",
-    "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-solid": "^2.10.2"
   }
 }
