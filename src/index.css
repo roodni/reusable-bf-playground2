@@ -1,0 +1,17 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+}
+
+#root {
+  position: relative;
+  height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}

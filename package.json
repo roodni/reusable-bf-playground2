@@ -11,11 +11,9 @@
     "lint-fix": "eslint --fix ."
   },
   "dependencies": {
-    "@suid/material": "^0.16.0",
     "solid-js": "^1.8.17"
   },
   "devDependencies": {
-    "@suid/vite-plugin": "^0.2.0",
     "@types/node": "^20.14.11",
     "@typescript-eslint/parser": "^7.16.1",
     "eslint": "^8.57.0",
