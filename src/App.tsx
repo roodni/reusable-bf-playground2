@@ -1,5 +1,8 @@
 // import { createSignal } from 'solid-js';
-import { Component } from 'solid-js';
+import { Component, onMount } from 'solid-js';
+import ace from 'ace-builds';
+import 'ace-builds/esm-resolver';
+import code from './assets/hello2.bfml?raw';
 import './App.css';
 
 const Textarea: Component<{}> = () => {
@@ -20,6 +23,14 @@ export default function App() {
   const headerHeight = '3rem';
   const leftFooterHeight = '3rem';
 
+  onMount(() => {
+    ace.edit('editor', {
+      mode: 'ace/mode/ocaml',
+      fontSize: 16,
+      value: code
+    });
+  });
+
   return (
     <div style={{
       display: 'flex',
@@ -30,7 +41,7 @@ export default function App() {
           style={{
             width: '100%',
             height: headerHeight,
-            'background-color': 'burlywood'
+            // 'background-color': 'burlywood'
           }}
           class='valign-center'
         >
@@ -44,7 +55,7 @@ export default function App() {
         style={{
           width: '50%',
           height: `calc(100svh - ${headerHeight})`,
-          'background-color': 'olive',
+          // 'background-color': 'olive',
           padding: '4px',
         }}
       >
@@ -53,17 +64,13 @@ export default function App() {
             height: `calc(100% - ${leftFooterHeight})`,
           }}
         >
-          <textarea
-            style={{
-              width: '100%',
-              height: '100%',
-              resize: 'none',
-            }}
-          >
-          </textarea>
+          <div id='editor' />
         </div>
         <div
-          style={{height: leftFooterHeight}}
+          style={{
+            height: leftFooterHeight,
+            'justify-content': 'right'
+          }}
           class='valign-center'
         >
           <select class='input'>
@@ -82,11 +89,11 @@ export default function App() {
         style={{
           width: '50%',
           height: `calc(100svh - ${headerHeight})`,
-          'background-color': 'peachpuff',
+          // 'background-color': 'peachpuff',
         }}
       >
         <div class='right-box'>
-          Error
+          これがAce Editorの力だ
         </div>
         <div class='right-box'>
           brainf**k:
