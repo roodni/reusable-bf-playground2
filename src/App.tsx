@@ -1,62 +1,63 @@
 // import { createSignal } from 'solid-js';
-import { Component, onMount } from 'solid-js';
-import ace from 'ace-builds';
-import 'ace-builds/esm-resolver';
-import code from './assets/hello2.bfml?raw';
-import './App.css';
+import ace from "ace-builds";
+import "ace-builds/esm-resolver";
+import { Component, onMount } from "solid-js";
+import "./App.css";
+import code from "./assets/hello2.bfml?raw";
 
-const Textarea: Component<{}> = () => {
+const Textarea: Component = () => {
   return (
     <textarea
       rows={7}
       style={{
-        width: '100%',
-        resize: 'none',
-        display: 'block'
+        width: "100%",
+        resize: "none",
+        display: "block",
       }}
-    >
-    </textarea>
+    />
   );
 };
 
 export default function App() {
-  const headerHeight = '3rem';
-  const leftFooterHeight = '3rem';
+  const headerHeight = "3rem";
+  const leftFooterHeight = "3rem";
 
   onMount(() => {
-    ace.edit('editor', {
-      mode: 'ace/mode/ocaml',
+    ace.edit("editor", {
+      mode: "ace/mode/ocaml",
       fontSize: 16,
-      value: code
+      value: code,
     });
   });
 
   return (
-    <div style={{
-      display: 'flex',
-      'flex-wrap': 'wrap'
-    }}>
+    <div
+      style={{
+        display: "flex",
+        "flex-wrap": "wrap",
+      }}
+    >
       {/* ヘッダー */}
       <div
-          style={{
-            width: '100%',
-            height: headerHeight,
-            // 'background-color': 'burlywood'
-          }}
-          class='valign-center'
-        >
-        <div style={{'font-size': '1.5rem'}} class='right-box'>
+        style={{
+          width: "100%",
+          height: headerHeight,
+          // 'background-color': 'burlywood'
+        }}
+        class="valign-center"
+      >
+        <div style={{ "font-size": "1.5rem" }} class="right-box">
           Reusable-bf Playground
         </div>
       </div>
-      
+
       {/* 左 */}
       <div
         style={{
-          width: '50%',
+          width: "50%",
           height: `calc(100svh - ${headerHeight})`,
           // 'background-color': 'olive',
-          padding: '4px',
+          padding: "4px",
         }}
       >
         <div
@@ -64,50 +65,48 @@ export default function App() {
             height: `calc(100% - ${leftFooterHeight})`,
           }}
         >
-          <div id='editor' />
+          <div id="editor" />
         </div>
         <div
           style={{
             height: leftFooterHeight,
-            'justify-content': 'right'
+            "justify-content": "right",
           }}
-          class='valign-center'
+          class="valign-center"
         >
-          <select class='input'>
+          <select class="input">
             <option>sandbox.bfml</option>
             <option>examples/hello.bfml</option>
             <option>std.bfml</option>
           </select>
-          <button class='input'>
-            Compile
-          </button>
+          <button class="input">Compile</button>
         </div>
       </div>
 
       {/* 右 */}
       <div
         style={{
-          width: '50%',
+          width: "50%",
           height: `calc(100svh - ${headerHeight})`,
           // 'background-color': 'peachpuff',
         }}
       >
-        <div class='right-box'>
-          これがAce Editorの力だ
-        </div>
-        <div class='right-box'>
+        <div class="right-box">これがAce Editorの力だ</div>
+        <div class="right-box">
           brainf**k:
-          <Textarea></Textarea>
+          <Textarea />
         </div>
-        <div class='right-box'>
+        <div class="right-box">
           Input:
-          <Textarea></Textarea>
-          <button class='input'>Run</button>
-          <button class='input' disabled>Stop</button>
+          <Textarea />
+          <button class="input">Run</button>
+          <button class="input" disabled>
+            Stop
+          </button>
         </div>
-        <div class='right-box'>
+        <div class="right-box">
           Output:
-          <Textarea></Textarea>
+          <Textarea />
         </div>
       </div>
     </div>
