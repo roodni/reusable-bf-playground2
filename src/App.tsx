@@ -11,7 +11,7 @@ const Textarea: Component = () => {
       rows={7}
       style={{
         width: "100%",
-        resize: "none",
+        resize: "vertical",
         display: "block",
       }}
     />
@@ -89,6 +89,7 @@ export default function App() {
           width: "50%",
           height: `calc(100svh - ${headerHeight})`,
           // 'background-color': 'peachpuff',
+          "overflow-y": "scroll",
         }}
       >
         <div class="right-box">これがAce Editorの力だ</div>
