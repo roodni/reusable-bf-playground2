@@ -1,6 +1,6 @@
 // import { createSignal } from 'solid-js';
 import ace from "ace-builds";
-import "ace-builds/esm-resolver";
+import "ace-builds/src-noconflict/mode-ocaml";
 import { Component, onMount } from "solid-js";
 import "./App.css";
 import code from "./assets/hello2.bfml?raw";
