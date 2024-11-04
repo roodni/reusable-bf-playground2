@@ -1,0 +1,194 @@
+let rec fix f x = f (fix f) x
+
+// falseのとき落ちる
+let verify cond =
+  if cond then ()
+  else failwith "Verification failed"
+
+let abs i = if i < 0 then -i else i
+
+let max a b = if a < b then b else a
+let min a b = if a < b then a else b
+
+let power x a =
+  fix (fun loop a accu ->
+    if a < 0 then failwith "Expotent must be non-negative"
+    else if a = 0 then accu
+    else loop (a - 1) (x * accu)
+  ) a 1
+
+(* $dive のラップ
+   有効範囲を限りたいときに使う
+*)
+let dive i st = [
+  $dive i
+  *st
+]
+
+let if_gen cond st =
+  if cond then st else []
+
+
+let gen_del x = [
+  ! x [ - x ]
+]
+
+let gen_repeat c loop = [
+  ! c [ - c  *loop ]
+]
+
+let gen_repeat_restore src block = [
+  $alloc { backup: cell; }
+  *gen_repeat src [
+    + backup
+    *block
+  ]
+  *gen_repeat backup [ + src ]
+]
+
+let gen_if_restore c st = [
+  $alloc { bu }
+  ! c [
+    *gen_repeat c [ + bu ]
+    *st
+  ]
+  *gen_repeat bu [ + c ]
+]
+
+
+let gen_reset_index i = [
+  <!> i [ < i ]
+]
+
+
+let gen_geti dest ed = [
+  $alloc { x: cell; }
+  , x
+  - x ed
+  ! x [
+    - x ('0' - ed)
+    *gen_repeat dest [ + x 10 ]
+    *gen_repeat x [ + dest ]
+    , x
+    - x ed
+  ]
+]
+
+let string_to_list s =
+  let rec loop i accu =
+    if i < 0 then accu
+    else
+      let c = string_get s i in
+      loop (i - 1) (c :: accu)
+  in
+  loop (string_length s - 1) nil
+
+let gen_puts s = [
+  $alloc { c }
+  *fix
+    (fun loop prev l -> match l with
+      | nil -> []
+      | curr :: rest ->
+          let out =
+            if abs (curr - prev) <= 3 + curr
+              then [ + c (curr - prev) ]
+              else [ *gen_del c  + c curr ]
+          in
+          [ *out  . c  *loop curr rest ]
+    ) 0 (string_to_list s)
+]
+
+// リスト l を比較関数 compare でソートする
+let sort compare l =
+  fix
+    (fun sort -> fun rest sorted ->
+      match rest with
+      | nil -> sorted
+      | pivot :: rest ->
+          fix
+            (fun partition -> fun left right l ->
+              match l with
+              | nil -> sort left (pivot :: sort right sorted)
+              | hd :: tl ->
+                  if compare hd pivot < 0
+                  then partition (hd :: left) right tl
+                  else partition left (hd :: right) tl)
+            nil nil rest)
+    l nil
+
+// セル dest からセル src の中身だけ引く
+// src はゼロになる
+// オーバーフローするとき文列 overflow を実行する
+let gen_sub_safe src dest overflow = [
+  ! src [
+    - src
+    ? dest [ - dest ] [
+      *overflow
+      *gen_del src
+    ]
+  ]
+]
+
+(* セル sel の中身で分岐する
+   sel は破壊される
+   整数と文列のペアのリスト cases の各要素のペアの整数を小さい順に見て
+   sel の中身と同じであれば文列を実行する
+   該当するものがなければ文列 default を実行する
+   文列中で sel の中身が変化しても良い
+*)
+let gen_switch sel cases default = [
+  **let cases =
+    sort (fun (n1, _) (n2, _) -> n1 - n2) cases
+  in $
+  $alloc {
+    sub_src; flag_eq; flag_els
+  }
+  *fix
+    (fun loop prev cases ->
+      match cases with
+      | nil -> default
+      | (num, block) :: cases -> [
+          + sub_src (num - prev)
+          + flag_eq
+          *gen_sub_safe sub_src sel [ - flag_eq ]
+          ? sel [ - flag_eq ] []
+          + flag_els
+          ! flag_eq [
+            - flag_eq
+            - flag_els
+            *block
+          ]
+          ! flag_els [
+            - flag_els
+            *loop num cases
+          ]
+        ])
+    0 cases
+]
+
+(* セル sel の中身で分岐する
+   sel は分岐の前に復元される
+   sel の中身を i とする。文列のリスト blocks の
+   第 i 要素が存在する場合それを実行する
+   第 i 要素が存在しない場合文列 default を実行する
+   文列中で sel の中身が変化しても良い
+*)
+let gen_switch_nat sel blocks default = [
+  *fix
+    (fun loop i blocks ->
+      match blocks with
+      | nil -> [
+          + sel i
+          *default
+        ]
+      | block :: rest -> [
+          ? sel [
+            - sel
+            *loop (i + 1) rest
+          ] [
+            + sel i
+            *block
+          ]
+        ])
+    0 blocks
+]
