@@ -40,4 +40,6 @@ body {
   width: 100%;
   resize: vertical;
   display: block;
+  word-break: break-all;
+  overflow-y: scroll;
 }

@@ -5,6 +5,7 @@ import {
   createSignal,
   For,
   Match,
+  onCleanup,
   onMount,
   Show,
   Switch,
@@ -53,8 +54,23 @@ export default function App() {
   onMount(() => {
     const editor = ace.edit("editor", {
       fontSize: 14,
+      // showPrintMargin: false
     });
     setBfmlEditor(editor);
+  });
+
+  const handleBeforeUnload = (event: Event) => {
+    // ファイルが編集されていたら遷移時に確認する
+    const changed = editingFiles
+      .values()
+      .some((f) => f.session && f.session.getValue() !== f.settings.code);
+    if (changed) {
+      event.preventDefault();
+    }
+  };
+  window.addEventListener("beforeunload", handleBeforeUnload);
+  onCleanup(() => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
   });
 
   // ファイル選択に関すること
@@ -218,7 +234,6 @@ export default function App() {
         }}
       >
         <div class="right-box">
-          {"(info) "}
           <Switch>
             <Match when={compilingState().t === "ready"}>Ready</Match>
             <Match when={compilingState().t === "compiling"}>
