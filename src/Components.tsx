@@ -9,7 +9,7 @@ export const CodeArea: Component<{
 export const CodeDisplayArea: Component<{
   code: string;
 }> = (props) => {
-  let textarea: HTMLTextAreaElement;
+  let textarea!: HTMLTextAreaElement;
   createEffect(() => {
     textarea.value = props.code;
   });

@@ -1,9 +1,29 @@
 import ace from "ace-builds";
-import "ace-builds/src-noconflict/mode-ocaml";
-import { createSignal, Match, onMount, Show, Switch } from "solid-js";
+import "ace-builds/src-noconflict/mode-fsharp";
+import {
+  createEffect,
+  createSignal,
+  For,
+  Match,
+  onMount,
+  Show,
+  Switch,
+} from "solid-js";
 import { CodeArea, CodeDisplayArea } from "./Components";
 import CompileWorker from "./assets/playground.bc.js?worker";
-import { fileSettingsList } from "./fileSettings";
+import { FileSettings, fileSettingsList } from "./fileSettings";
+
+function configureAceSession(session: ace.Ace.EditSession) {
+  // Ace Editorの設定をここに書く
+  session.setMode("ace/mode/fsharp");
+  session.setTabSize(2);
+  session.setUseSoftTabs(true);
+}
+
+type EditingFile = {
+  session: ace.Ace.EditSession | undefined;
+  settings: FileSettings;
+};
 
 type CompilingState =
   | { t: "ready" }
@@ -17,24 +37,66 @@ export default function App() {
   const headerHeight = "3rem";
   const leftFooterHeight = "3rem";
 
-  const [stderr, setStderr] = createSignal("");
+  const editingFiles = new Map<string, EditingFile>(
+    fileSettingsList.map((settings) => [
+      settings.name,
+      {
+        session: undefined,
+        settings,
+      },
+    ]),
+  );
 
-  // let bfmlEditor: ace.Ace.Editor;
-  let bfArea: HTMLTextAreaElement;
-
+  const [bfmlEditor, setBfmlEditor] = createSignal<ace.Ace.Editor | undefined>(
+    undefined,
+  );
   onMount(() => {
-    ace.edit("editor", {
-      mode: "ace/mode/ocaml",
-      fontSize: 16,
-      value: fileSettingsList[0].code,
+    const editor = ace.edit("editor", {
+      fontSize: 14,
     });
+    setBfmlEditor(editor);
   });
+
+  // ファイル選択に関すること
+  const [selectingFileName, setSelectingFileName] = createSignal(
+    (fileSettingsList.find((s) => s.selected) ?? fileSettingsList[0]).name,
+  );
+
+  let fileSelect!: HTMLSelectElement;
+  createEffect(() => {
+    fileSelect.value = selectingFileName();
+  });
+  const handleFileChange = () => {
+    setSelectingFileName(fileSelect.value);
+  };
+
+  // ファイル選択に変更があったら、エディタの内容を切り替える
+  createEffect(() => {
+    const name = selectingFileName();
+    const editingFile = editingFiles.get(name);
+    const editor = bfmlEditor();
+    if (!editingFile || !editor) {
+      return;
+    }
+    if (!editingFile.session) {
+      editingFile.session = ace.createEditSession(
+        editingFile.settings.code,
+        editor.session.getMode(), // 第二引数は本当は省略できそう
+      );
+      configureAceSession(editingFile.session);
+    }
+    editor.setSession(editingFile.session);
+  });
+
+  // コンパイルに関すること
+  const [stderr, setStderr] = createSignal("");
+  let bfArea!: HTMLTextAreaElement;
 
   const [compilingState, setCompilingState] = createSignal<CompilingState>({
     t: "ready",
   });
 
-  const compileHandler = () => {
+  const handleCompileClick = () => {
     if (compilingState().t === "compiling") {
       return;
     }
@@ -42,7 +104,6 @@ export default function App() {
     setCompilingState({ t: "compiling", worker });
     worker.addEventListener("message", (res) => {
       worker.terminate();
-      console.log(res.data);
       setStderr(res.data.err);
       bfArea.value = res.data.out;
       setCompilingState({ t: res.data.success ? "succeed" : "failed" });
@@ -52,12 +113,16 @@ export default function App() {
       console.error(e);
       setCompilingState({ t: "fatal" });
     });
+    const files = editingFiles
+      .values()
+      .map((f) => ({
+        name: f.settings.name,
+        content: f.session?.getValue() ?? f.settings.code,
+      }))
+      .toArray();
     worker.postMessage({
-      files: fileSettingsList.map((f) => ({
-        name: f.name,
-        content: f.code,
-      })),
-      entrypoint: "hello2.bfml",
+      files,
+      entrypoint: selectingFileName(),
       optimize: 3,
       showLayout: false,
       maxLength: 1000000,
@@ -66,7 +131,7 @@ export default function App() {
     setStderr("");
   };
 
-  const stopCompileHandler = () => {
+  const handleStopCompileClick = () => {
     const state = compilingState();
     if (state.t !== "compiling") {
       return;
@@ -119,21 +184,23 @@ export default function App() {
           }}
           class="valign-center"
         >
-          <select class="input">
-            <option>sandbox.bfml</option>
-            <option>examples/hello.bfml</option>
-            <option>std.bfml</option>
+          <select ref={fileSelect} class="input" onChange={handleFileChange}>
+            <For each={fileSettingsList}>
+              {(setting) => (
+                <option value={setting.name}>{setting.name}</option>
+              )}
+            </For>
           </select>
           <button
             class="input"
-            onClick={compileHandler}
+            onClick={handleCompileClick}
             disabled={compilingState().t === "compiling"}
           >
             Compile
           </button>
           <button
             class="input"
-            onClick={stopCompileHandler}
+            onClick={handleStopCompileClick}
             disabled={compilingState().t !== "compiling"}
           >
             Stop
@@ -151,6 +218,7 @@ export default function App() {
         }}
       >
         <div class="right-box">
+          {"(info) "}
           <Switch>
             <Match when={compilingState().t === "ready"}>Ready</Match>
             <Match when={compilingState().t === "compiling"}>
@@ -168,7 +236,7 @@ export default function App() {
         </div>
         <Show when={stderr() !== ""}>
           <div class="right-box">
-            Stderr output:
+            Standard error output:
             <CodeDisplayArea code={stderr()} />
           </div>
         </Show>
@@ -186,7 +254,7 @@ export default function App() {
         </div>
         <div class="right-box">
           Output:
-          <CodeArea />
+          <CodeDisplayArea code={selectingFileName()} />
         </div>
       </div>
     </div>
