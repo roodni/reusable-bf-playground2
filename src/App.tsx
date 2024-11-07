@@ -21,23 +21,18 @@ function configureAceSession(session: ace.Ace.EditSession) {
   session.setUseSoftTabs(true);
 }
 
-type EditingFile = {
-  session: ace.Ace.EditSession | undefined;
-  settings: FileSettings;
-};
-
-type CompilingState =
-  | { t: "ready" }
-  | { t: "compiling"; worker: Worker }
-  | { t: "succeed" }
-  | { t: "failed" }
-  | { t: "terminated" }
-  | { t: "fatal" };
+function narrowType<T, U extends T>(o: T, f: (o: T) => o is U): U | false {
+  return f(o) ? o : false;
+}
 
 export default function App() {
   const headerHeight = "3rem";
   const leftFooterHeight = "3rem";
 
+  type EditingFile = {
+    session: ace.Ace.EditSession | undefined;
+    settings: FileSettings;
+  };
   const editingFiles = new Map<string, EditingFile>(
     fileSettingsList.map((settings) => [
       settings.name,
@@ -108,27 +103,60 @@ export default function App() {
   const [stderr, setStderr] = createSignal("");
   let bfArea!: HTMLTextAreaElement;
 
-  const [compilingState, setCompilingState] = createSignal<CompilingState>({
+  type CompilingState =
+    | { t: "ready" }
+    | { t: "compiling"; cleanup: () => void }
+    | { t: "succeed" }
+    | { t: "failed" }
+    | { t: "aborted" }
+    | { t: "fatal"; message: string };
+  const [compilingState, _setCompilingState] = createSignal<CompilingState>({
     t: "ready",
   });
+  const updateCompilingState = (next: CompilingState) => {
+    const prev = compilingState();
+    if (prev.t === "compiling") {
+      prev.cleanup();
+    }
+    _setCompilingState(next);
+  };
+
+  const [compilingTime, setCompilingTime] = createSignal(0);
+  const compilingSec = () => compilingTime() / 1000;
+  const [compiledFileName, setCompiledFileName] = createSignal("");
 
   const handleCompileClick = () => {
     if (compilingState().t === "compiling") {
       return;
     }
     const worker = new CompileWorker();
-    setCompilingState({ t: "compiling", worker });
-    worker.addEventListener("message", (res) => {
+
+    setCompilingTime(0);
+    const startTime = Date.now();
+    const updateTime = () => {
+      setCompilingTime(Date.now() - startTime);
+    };
+    const timer = setInterval(updateTime, 100);
+
+    const cleanup = () => {
       worker.terminate();
+      clearTimeout(timer);
+      updateTime();
+    };
+    updateCompilingState({ t: "compiling", cleanup });
+
+    worker.addEventListener("message", (res) => {
       setStderr(res.data.err);
       bfArea.value = res.data.out;
-      setCompilingState({ t: res.data.success ? "succeed" : "failed" });
+      updateCompilingState({ t: res.data.success ? "succeed" : "failed" });
     });
     worker.addEventListener("error", (e) => {
-      worker.terminate();
       console.error(e);
-      setCompilingState({ t: "fatal" });
+      updateCompilingState({ t: "fatal", message: e.message });
     });
+
+    const filename = selectingFileName();
+    setCompiledFileName(filename);
     const files = editingFiles
       .values()
       .map((f) => ({
@@ -138,22 +166,20 @@ export default function App() {
       .toArray();
     worker.postMessage({
       files,
-      entrypoint: selectingFileName(),
+      entrypoint: filename,
       optimize: 3,
       showLayout: false,
       maxLength: 1000000,
     });
+
     bfArea.value = "";
     setStderr("");
   };
 
   const handleStopCompileClick = () => {
-    const state = compilingState();
-    if (state.t !== "compiling") {
-      return;
+    if (compilingState().t === "compiling") {
+      updateCompilingState({ t: "aborted" });
     }
-    state.worker.terminate();
-    setCompilingState({ t: "terminated" });
   };
 
   return (
@@ -237,16 +263,25 @@ export default function App() {
           <Switch>
             <Match when={compilingState().t === "ready"}>Ready</Match>
             <Match when={compilingState().t === "compiling"}>
-              Compiling ...
+              Compiling {compiledFileName()} ...
+              <Show when={compilingSec() >= 1}>
+                {" "}
+                ({compilingSec().toFixed(0)}s)
+              </Show>
             </Match>
-            <Match when={compilingState().t === "succeed"}>Compiled</Match>
+            <Match when={compilingState().t === "succeed"}>
+              Compiled {compiledFileName()} ({compilingSec().toFixed(1)}s)
+            </Match>
             <Match when={compilingState().t === "failed"}>
-              Failed to compile
+              Failed to compile {compiledFileName()} (
+              {compilingSec().toFixed(1)}s)
             </Match>
-            <Match when={compilingState().t === "terminated"}>
-              Compilation aborted
+            <Match when={compilingState().t === "aborted"}>
+              Compilation aborted ({compilingSec().toFixed(1)}s)
             </Match>
-            <Match when={compilingState().t === "fatal"}>Fatal error</Match>
+            <Match when={narrowType(compilingState(), (s) => s.t === "fatal")}>
+              {(s) => <>Fatal error: {s().message}</>}
+            </Match>
           </Switch>
         </div>
         <Show when={stderr() !== ""}>

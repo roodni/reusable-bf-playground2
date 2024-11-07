@@ -13,7 +13,9 @@ export type FileSettings = {
 export const fileSettingsList: FileSettings[] = [
   {
     name: "sandbox.bfml",
-    code: `let main = [
+    code: `let rec f () = f ();;
+let main = [
+  
 ]`,
     selected: true,
   },
