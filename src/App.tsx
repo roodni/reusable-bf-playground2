@@ -125,7 +125,7 @@ export default function App() {
   const compilingSec = () => compilingTime() / 1000;
   const [compiledFileName, setCompiledFileName] = createSignal("");
 
-  const handleCompileClick = () => {
+  const compile = () => {
     if (compilingState().t === "compiling") {
       return;
     }
@@ -136,12 +136,16 @@ export default function App() {
     const updateTime = () => {
       setCompilingTime(Date.now() - startTime);
     };
-    const timer = setInterval(updateTime, 100);
+    const elapsedTimeTimer = setInterval(updateTime, 1000);
+    const timeoutTimer = setTimeout(() => {
+      updateCompilingState({ t: "aborted" });
+    }, 30000);
 
     const cleanup = () => {
       worker.terminate();
-      clearTimeout(timer);
+      clearInterval(elapsedTimeTimer);
       updateTime();
+      clearTimeout(timeoutTimer);
     };
     updateCompilingState({ t: "compiling", cleanup });
 
@@ -176,9 +180,19 @@ export default function App() {
     setStderr("");
   };
 
+  const handleCompileClick = compile;
   const handleStopCompileClick = () => {
     if (compilingState().t === "compiling") {
       updateCompilingState({ t: "aborted" });
+    }
+  };
+  const handleBfmlEditorKeyDown = (event: KeyboardEvent) => {
+    if (
+      event.key === "Enter" &&
+      (event.ctrlKey || event.metaKey) &&
+      !event.repeat
+    ) {
+      compile();
     }
   };
 
@@ -217,7 +231,7 @@ export default function App() {
             height: `calc(100% - ${leftFooterHeight})`,
           }}
         >
-          <div id="editor" />
+          <div id="editor" onKeyDown={handleBfmlEditorKeyDown} />
         </div>
         <div
           style={{
