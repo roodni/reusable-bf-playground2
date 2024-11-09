@@ -14,8 +14,12 @@ import { CodeArea, CodeDisplayArea } from "./Components";
 import CompileWorker from "./assets/playground.bc.js?worker";
 import { FileSettings, fileSettingsList } from "./fileSettings";
 
+// Ace Editorの設定をここに書く
+const aceEditorOptions: Partial<ace.Ace.EditorOptions> = {
+  fontSize: 14,
+  showPrintMargin: false,
+};
 function configureAceSession(session: ace.Ace.EditSession) {
-  // Ace Editorの設定をここに書く
   session.setMode("ace/mode/fsharp");
   session.setTabSize(2);
   session.setUseSoftTabs(true);
@@ -26,9 +30,6 @@ function narrowType<T, U extends T>(o: T, f: (o: T) => o is U): U | false {
 }
 
 export default function App() {
-  const headerHeight = "3rem";
-  const leftFooterHeight = "3rem";
-
   type EditingFile = {
     session: ace.Ace.EditSession | undefined;
     settings: FileSettings;
@@ -43,14 +44,12 @@ export default function App() {
     ]),
   );
 
+  let bfmlEditorElement!: HTMLDivElement;
   const [bfmlEditor, setBfmlEditor] = createSignal<ace.Ace.Editor | undefined>(
     undefined,
   );
   onMount(() => {
-    const editor = ace.edit("editor", {
-      fontSize: 14,
-      // showPrintMargin: false
-    });
+    const editor = ace.edit(bfmlEditorElement, aceEditorOptions);
     setBfmlEditor(editor);
   });
 
@@ -197,49 +196,22 @@ export default function App() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        "flex-wrap": "wrap",
-      }}
-    >
+    <div class="app">
       {/* ヘッダー */}
-      <div
-        style={{
-          width: "100%",
-          height: headerHeight,
-          // 'background-color': 'burlywood'
-        }}
-        class="valign-center"
-      >
-        <div style={{ "font-size": "1.5rem" }} class="right-box">
-          Reusable-bf Playground
-        </div>
+      <div class="header pad-box">
+        <div class="t">Reusable-bf Playground</div>
       </div>
 
       {/* 左 */}
-      <div
-        style={{
-          width: "50%",
-          height: `calc(100svh - ${headerHeight})`,
-          // 'background-color': 'olive',
-          padding: "4px",
-        }}
-      >
-        <div
-          style={{
-            height: `calc(100% - ${leftFooterHeight})`,
-          }}
-        >
-          <div id="editor" onKeyDown={handleBfmlEditorKeyDown} />
+      <div class="l pad-box">
+        <div class="editor-container">
+          <div
+            ref={bfmlEditorElement}
+            class="bfml-editor"
+            onKeyDown={handleBfmlEditorKeyDown}
+          />
         </div>
-        <div
-          style={{
-            height: leftFooterHeight,
-            "justify-content": "right",
-          }}
-          class="valign-center"
-        >
+        <div class="editor-button-container">
           <select ref={fileSelect} class="input" onChange={handleFileChange}>
             <For each={fileSettingsList}>
               {(setting) => (
@@ -252,7 +224,7 @@ export default function App() {
             onClick={handleCompileClick}
             disabled={compilingState().t === "compiling"}
           >
-            Compile
+            Compile (Ctrl + Enter)
           </button>
           <button
             class="input"
@@ -265,15 +237,8 @@ export default function App() {
       </div>
 
       {/* 右 */}
-      <div
-        style={{
-          width: "50%",
-          height: `calc(100svh - ${headerHeight})`,
-          // 'background-color': 'peachpuff',
-          "overflow-y": "scroll",
-        }}
-      >
-        <div class="right-box">
+      <div class="r">
+        <div class="pad-box">
           <Switch>
             <Match when={compilingState().t === "ready"}>Ready</Match>
             <Match when={compilingState().t === "compiling"}>
@@ -299,16 +264,16 @@ export default function App() {
           </Switch>
         </div>
         <Show when={stderr() !== ""}>
-          <div class="right-box">
+          <div class="pad-box">
             Standard error output:
             <CodeDisplayArea code={stderr()} />
           </div>
         </Show>
-        <div class="right-box">
+        <div class="pad-box">
           brainf**k:
           <CodeArea ref={bfArea} />
         </div>
-        <div class="right-box">
+        <div class="pad-box">
           Input:
           <CodeArea />
           <button class="input">Run</button>
@@ -316,7 +281,7 @@ export default function App() {
             Stop
           </button>
         </div>
-        <div class="right-box">
+        <div class="pad-box">
           Output:
           <CodeDisplayArea code={selectingFileName()} />
         </div>
