@@ -2,6 +2,7 @@ import ace from "ace-builds";
 import "ace-builds/src-noconflict/mode-fsharp";
 import {
   createEffect,
+  createMemo,
   createSignal,
   For,
   Match,
@@ -10,7 +11,7 @@ import {
   Show,
   Switch,
 } from "solid-js";
-import { CodeArea, CodeDisplayArea } from "./Components";
+import { CodeArea, CodeAreaAPI, CodeDisplayArea } from "./Components";
 import CompileWorker from "./assets/playground.bc.js?worker";
 import { FileSettings, fileSettingsList } from "./fileSettings";
 
@@ -44,7 +45,7 @@ export default function App() {
     ]),
   );
 
-  let bfmlEditorElement!: HTMLDivElement;
+  let bfmlEditorElement: HTMLDivElement;
   const [bfmlEditor, setBfmlEditor] = createSignal<ace.Ace.Editor | undefined>(
     undefined,
   );
@@ -72,7 +73,7 @@ export default function App() {
     (fileSettingsList.find((s) => s.selected) ?? fileSettingsList[0]).name,
   );
 
-  let fileSelect!: HTMLSelectElement;
+  let fileSelect: HTMLSelectElement;
   createEffect(() => {
     fileSelect.value = selectingFileName();
   });
@@ -100,7 +101,20 @@ export default function App() {
 
   // コンパイルに関すること
   const [stderr, setStderr] = createSignal("");
-  let bfArea!: HTMLTextAreaElement;
+
+  let bfAreaApi: CodeAreaAPI;
+  const [bfCode, _setBfCode] = createSignal("foo");
+  const bfCodeSize = createMemo(() => {
+    const code = bfCode();
+    let cnt = 0;
+    const commands = "+-.,<>[]";
+    for (const c of code) {
+      if (commands.includes(c)) {
+        cnt++;
+      }
+    }
+    return cnt;
+  });
 
   type CompilingState =
     | { t: "ready" }
@@ -150,7 +164,7 @@ export default function App() {
 
     worker.addEventListener("message", (res) => {
       setStderr(res.data.err);
-      bfArea.value = res.data.out;
+      bfAreaApi.update(res.data.out);
       updateCompilingState({ t: res.data.success ? "succeed" : "failed" });
     });
     worker.addEventListener("error", (e) => {
@@ -175,7 +189,7 @@ export default function App() {
       maxLength: 1000000,
     });
 
-    bfArea.value = "";
+    bfAreaApi.update("");
     setStderr("");
   };
 
@@ -206,13 +220,13 @@ export default function App() {
       <div class="l pad-box">
         <div class="editor-container">
           <div
-            ref={bfmlEditorElement}
+            ref={bfmlEditorElement!}
             class="bfml-editor"
             onKeyDown={handleBfmlEditorKeyDown}
           />
         </div>
         <div class="editor-button-container">
-          <select ref={fileSelect} class="input" onChange={handleFileChange}>
+          <select ref={fileSelect!} class="input" onChange={handleFileChange}>
             <For each={fileSettingsList}>
               {(setting) => (
                 <option value={setting.name}>{setting.name}</option>
@@ -265,16 +279,21 @@ export default function App() {
         </div>
         <Show when={stderr() !== ""}>
           <div class="pad-box">
-            Standard error output:
+            Standard error output
             <CodeDisplayArea code={stderr()} />
           </div>
         </Show>
         <div class="pad-box">
-          brainf**k:
-          <CodeArea ref={bfArea} />
+          brainf**k
+          <Show when={bfCodeSize() >= 1}> ({bfCodeSize()} commands)</Show>
+          <CodeArea
+            ref={bfAreaApi!}
+            onUpdate={_setBfCode}
+            defaultValue={bfCode()}
+          />
         </div>
         <div class="pad-box">
-          Input:
+          Input
           <CodeArea />
           <button class="input">Run</button>
           <button class="input" disabled>
@@ -282,7 +301,7 @@ export default function App() {
           </button>
         </div>
         <div class="pad-box">
-          Output:
+          Output
           <CodeDisplayArea code={selectingFileName()} />
         </div>
       </div>
