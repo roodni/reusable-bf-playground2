@@ -256,33 +256,30 @@ export default function App() {
           <Switch>
             <Match when={compilingState().t === "ready"}>Ready</Match>
             <Match when={compilingState().t === "compiling"}>
-              Compiling {compiledFileName()} ...
-              <Show when={compilingSec() >= 1}>
-                {" "}
-                ({compilingSec().toFixed(0)}s)
-              </Show>
+              Compiling ... ({compiledFileName()}, {compilingSec().toFixed(0)}s)
             </Match>
             <Match when={compilingState().t === "succeed"}>
-              Compiled {compiledFileName()} ({compilingSec().toFixed(1)}s)
+              Compiled ({compiledFileName()}, {compilingSec().toFixed(1)}s)
             </Match>
             <Match when={compilingState().t === "failed"}>
-              Failed to compile {compiledFileName()} (
+              Compilation failed ({compiledFileName()},{" "}
               {compilingSec().toFixed(1)}s)
             </Match>
             <Match when={compilingState().t === "aborted"}>
-              Compilation aborted ({compilingSec().toFixed(1)}s)
+              Compilation aborted ({compiledFileName()},{" "}
+              {compilingSec().toFixed(1)}s)
             </Match>
             <Match when={narrowType(compilingState(), (s) => s.t === "fatal")}>
               {(s) => <>Fatal error: {s().message}</>}
             </Match>
           </Switch>
-        </div>
-        <Show when={stderr() !== ""}>
-          <div class="pad-box">
-            Standard error output
-            <CodeDisplayArea code={stderr()} />
+          <div style={{ display: stderr() === "" ? "none" : "block" }}>
+            <CodeDisplayArea
+              code={stderr()}
+              style={compilingState().t === "succeed" ? "normal" : "error"}
+            />
           </div>
-        </Show>
+        </div>
         <div class="pad-box">
           brainf**k
           <Show when={bfCodeSize() >= 1}> ({bfCodeSize()} commands)</Show>

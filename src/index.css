@@ -107,15 +107,32 @@ body {
   height: 100%;
   border-style: solid;
   border-width: 1px;
-  border-color: gray;
+  border-color: darkgray;
 }
 
 /* Components */
 
 .code-area {
   width: 100%;
+  font-size: 14px;
+  font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, "Source Code Pro",
+    source-code-pro, monospace;
   resize: vertical;
   display: block;
   word-break: break-all;
   overflow-y: scroll;
+
+  border-style: solid;
+  border-width: 1px;
+  border-color: gray;
+}
+
+.code-display-area-normal {
+  border-color: lightgray;
+  background-color: whitesmoke;
+}
+
+.code-display-area-error {
+  border-color: lightgray;
+  background-color: pink;
 }

@@ -2,9 +2,12 @@ import {
   Component,
   createEffect,
   createRenderEffect,
+  mergeProps,
   onMount,
   Ref,
 } from "solid-js";
+
+const defaultRows = 8;
 
 // uncontrolled な編集可能テキストエリア
 export type CodeAreaAPI = {
@@ -41,17 +44,28 @@ export const CodeArea: Component<{
       ref={textarea!}
       onInput={handleInput}
       class="code-area"
-      rows={7}
+      rows={defaultRows}
     />
   );
 };
 
 export const CodeDisplayArea: Component<{
   code: string;
-}> = (props) => {
+  style?: "normal" | "error";
+}> = (_props) => {
+  const props = mergeProps({ style: "normal" }, _props);
+
   let textarea!: HTMLTextAreaElement;
   createEffect(() => {
     textarea.value = props.code;
   });
-  return <textarea ref={textarea} class="code-area" readonly rows={7} />;
+
+  return (
+    <textarea
+      ref={textarea}
+      class={`code-area code-display-area-${props.style}`}
+      readonly
+      rows={defaultRows}
+    />
+  );
 };
