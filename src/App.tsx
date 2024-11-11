@@ -31,6 +31,8 @@ function narrowType<T, U extends T>(o: T, f: (o: T) => o is U): U | false {
 }
 
 export default function App() {
+  const ctrlEnter = "Ctrl + Enter";
+
   type EditingFile = {
     session: ace.Ace.EditSession | undefined;
     settings: FileSettings;
@@ -103,7 +105,7 @@ export default function App() {
   const [stderr, setStderr] = createSignal("");
 
   let bfAreaApi: CodeAreaAPI;
-  const [bfCode, _setBfCode] = createSignal("foo");
+  const [bfCode, _setBfCode] = createSignal("");
   const bfCodeSize = createMemo(() => {
     const code = bfCode();
     let cnt = 0;
@@ -199,31 +201,40 @@ export default function App() {
       updateCompilingState({ t: "aborted" });
     }
   };
-  const handleBfmlEditorKeyDown = (event: KeyboardEvent) => {
+
+  // キーボードショートカット
+  const [bfmlOrBf, setBfmlOrBf] = createSignal<"bfml" | "bf">("bfml");
+  const handleAppKeyDown = (event: KeyboardEvent) => {
     if (
       event.key === "Enter" &&
       (event.ctrlKey || event.metaKey) &&
       !event.repeat
     ) {
-      compile();
+      if (bfmlOrBf() === "bfml") {
+        compile();
+      } else {
+        // run bf
+      }
     }
   };
 
   return (
-    <div class="app">
+    <div class="app" onKeyDown={handleAppKeyDown}>
       {/* ヘッダー */}
       <div class="header pad-box">
         <div class="t">Reusable-bf Playground</div>
       </div>
 
       {/* 左 */}
-      <div class="l pad-box">
+      <div
+        class="l pad-box"
+        onMouseDown={
+          // 配列で指定すると型検査が効かない気がする
+          () => setBfmlOrBf("bfml")
+        }
+      >
         <div class="editor-container">
-          <div
-            ref={bfmlEditorElement!}
-            class="bfml-editor"
-            onKeyDown={handleBfmlEditorKeyDown}
-          />
+          <div ref={bfmlEditorElement!} class="editor" />
         </div>
         <div class="editor-button-container">
           <select ref={fileSelect!} class="input" onChange={handleFileChange}>
@@ -238,7 +249,15 @@ export default function App() {
             onClick={handleCompileClick}
             disabled={compilingState().t === "compiling"}
           >
-            Compile (Ctrl + Enter)
+            {"Compile "}
+            <span
+              classList={{
+                shortcut: true,
+                "shortcut-disabled": bfmlOrBf() !== "bfml",
+              }}
+            >
+              ({ctrlEnter})
+            </span>
           </button>
           <button
             class="input"
@@ -251,7 +270,7 @@ export default function App() {
       </div>
 
       {/* 右 */}
-      <div class="r">
+      <div class="r" onMouseDown={() => setBfmlOrBf("bf")}>
         <div class="pad-box">
           <Switch>
             <Match when={compilingState().t === "ready"}>Ready</Match>
@@ -292,10 +311,22 @@ export default function App() {
         <div class="pad-box">
           Input
           <CodeArea />
-          <button class="input">Run</button>
-          <button class="input" disabled>
-            Stop
-          </button>
+          <div class="input-button-container">
+            <button class="input">
+              {"Run "}
+              <span
+                classList={{
+                  shortcut: true,
+                  "shortcut-disabled": bfmlOrBf() !== "bf",
+                }}
+              >
+                ({ctrlEnter})
+              </span>
+            </button>
+            <button class="input" disabled>
+              Stop
+            </button>
+          </div>
         </div>
         <div class="pad-box">
           Output
