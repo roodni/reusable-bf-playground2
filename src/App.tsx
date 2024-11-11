@@ -214,6 +214,23 @@ export default function App() {
     }
   };
 
+  // インタプリタに関すること
+  let bfInputAreaApi: CodeAreaAPI;
+  const [bfInput, _setBfInput] = createSignal("");
+  const bfInputLines = createMemo(() => {
+    const text = bfInput();
+    if (text.length === 0) {
+      return 0;
+    }
+    let cnt = 1;
+    for (const c of text) {
+      if (c === "\n") {
+        cnt++;
+      }
+    }
+    return cnt;
+  });
+
   // キーボードショートカット
   const [bfmlOrBf, setBfmlOrBf] = createSignal<"bfml" | "bf">("bfml");
   const handleAppKeyDown = (event: KeyboardEvent) => {
@@ -323,8 +340,12 @@ export default function App() {
           />
         </div>
         <div class="pad-box">
-          Input
-          <CodeArea />
+          Input ({bfInputLines()} lines)
+          <CodeArea
+            ref={bfInputAreaApi!}
+            onUpdate={_setBfInput}
+            defaultValue={bfInput()}
+          />
           <div class="input-button-container">
             <button class="input">
               {"Run "}
