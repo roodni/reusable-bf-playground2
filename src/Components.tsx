@@ -16,8 +16,9 @@ export type CodeAreaAPI = {
 };
 export const CodeArea: Component<{
   ref?: Ref<CodeAreaAPI>;
-  onUpdate?: (value: string) => void; // 値が更新されたときに発火。初回および外側から更新された場合も発火する
   defaultValue?: string;
+  disabled?: boolean;
+  onUpdate?: (value: string) => void; // 値が更新されたときに発火。初回および外側から更新された場合も発火する
 }> = (props) => {
   let textarea: HTMLTextAreaElement;
   createRenderEffect(() => {
@@ -43,8 +44,12 @@ export const CodeArea: Component<{
     <textarea
       ref={textarea!}
       onInput={handleInput}
-      class="code-area"
+      classList={{
+        "code-area": true,
+        "code-area-disabled": props.disabled,
+      }}
       rows={defaultRows}
+      disabled={props.disabled}
     />
   );
 };

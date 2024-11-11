@@ -143,6 +143,9 @@ body {
   border-width: 1px;
   border-color: gray;
 }
+.code-area-disabled {
+  opacity: 50%;
+}
 
 .code-display-area-normal {
   border-color: lightgray;

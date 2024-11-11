@@ -306,6 +306,7 @@ export default function App() {
             ref={bfAreaApi!}
             onUpdate={_setBfCode}
             defaultValue={bfCode()}
+            disabled={compilingState().t === "compiling"}
           />
         </div>
         <div class="pad-box">
