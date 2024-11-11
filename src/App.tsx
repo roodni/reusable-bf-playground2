@@ -202,6 +202,18 @@ export default function App() {
     }
   };
 
+  const handleBfAreaInput = () => {
+    switch (compilingState().t) {
+      case "succeed":
+      case "failed":
+      case "aborted":
+      case "fatal":
+        setStderr("");
+        updateCompilingState({ t: "ready" });
+        break;
+    }
+  };
+
   // キーボードショートカット
   const [bfmlOrBf, setBfmlOrBf] = createSignal<"bfml" | "bf">("bfml");
   const handleAppKeyDown = (event: KeyboardEvent) => {
@@ -305,6 +317,7 @@ export default function App() {
           <CodeArea
             ref={bfAreaApi!}
             onUpdate={_setBfCode}
+            onInput={handleBfAreaInput}
             defaultValue={bfCode()}
             disabled={compilingState().t === "compiling"}
           />

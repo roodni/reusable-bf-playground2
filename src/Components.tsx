@@ -19,6 +19,7 @@ export const CodeArea: Component<{
   defaultValue?: string;
   disabled?: boolean;
   onUpdate?: (value: string) => void; // 値が更新されたときに発火。初回および外側から更新された場合も発火する
+  onInput?: (event: InputEvent) => void;
 }> = (props) => {
   let textarea: HTMLTextAreaElement;
   createRenderEffect(() => {
@@ -37,8 +38,9 @@ export const CodeArea: Component<{
     textarea.value = value;
     props.onUpdate?.(value);
   });
-  const handleInput = () => {
+  const handleInput = (event: InputEvent) => {
     props.onUpdate?.(textarea.value);
+    props.onInput?.(event);
   };
   return (
     <textarea
