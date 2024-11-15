@@ -60,6 +60,7 @@ export default function App() {
     // ファイルが編集されていたら遷移時に確認する
     const changed = editingFiles
       .values()
+      .toArray()
       .some((f) => f.session && f.session.getValue() !== f.settings.code);
     if (changed) {
       event.preventDefault();
