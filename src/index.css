@@ -135,7 +135,7 @@ body {
   font-size: 14px;
   font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, "Source Code Pro",
     source-code-pro, monospace;
-  resize: vertical;
+  padding: 2px;
   display: block;
   word-break: break-all;
   overflow-y: scroll;
@@ -144,8 +144,20 @@ body {
   border-width: 1px;
   border-color: gray;
 }
-.code-area-disabled {
+
+.code-input-area {
+  resize: vertical;
+}
+
+.code-input-area-disabled {
   opacity: 50%;
+}
+
+.code-display-area {
+  margin: 0;
+  white-space: pre-wrap;
+  min-height: 2.5rem;
+  max-height: 70svh;
 }
 
 .code-display-area-normal {

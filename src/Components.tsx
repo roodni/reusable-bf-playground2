@@ -1,6 +1,5 @@
 import {
   Component,
-  createEffect,
   createRenderEffect,
   mergeProps,
   onMount,
@@ -48,7 +47,8 @@ export const CodeArea: Component<{
       onInput={handleInput}
       classList={{
         "code-area": true,
-        "code-area-disabled": props.disabled,
+        "code-input-area": true,
+        "code-input-area-disabled": props.disabled,
       }}
       rows={defaultRows}
       disabled={props.disabled}
@@ -61,18 +61,15 @@ export const CodeDisplayArea: Component<{
   style?: "normal" | "error";
 }> = (_props) => {
   const props = mergeProps({ style: "normal" }, _props);
-
-  let textarea!: HTMLTextAreaElement;
-  createEffect(() => {
-    textarea.value = props.code;
-  });
-
   return (
-    <textarea
-      ref={textarea}
-      class={`code-area code-display-area-${props.style}`}
-      readonly
-      rows={defaultRows}
-    />
+    <pre
+      classList={{
+        "code-area": true,
+        "code-display-area": true,
+        [`code-display-area-${props.style}`]: true,
+      }}
+    >
+      {props.code}
+    </pre>
   );
 };
