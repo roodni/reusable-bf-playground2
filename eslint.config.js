@@ -1,6 +1,6 @@
 import js from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
-import solid from "eslint-plugin-solid/configs/typescript.js";
+import solid from "eslint-plugin-solid/configs/typescript";
 import ts from "typescript-eslint";
 
 export default ts.config(
