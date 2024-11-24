@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test": "vitest",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "gh-pages -d dist",
+    "deploy": "gh-pages -f -d dist",
     "lint": "eslint .",
     "lint-fix": "eslint --fix .",
     "format": "prettier -c .",
@@ -24,10 +25,12 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-solid": "^0.14.1",
     "gh-pages": "^6.2.0",
+    "jsdom": "^25.0.1",
     "prettier": "^3.3.3",
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.12.2",
     "vite": "^5.3.1",
-    "vite-plugin-solid": "^2.10.2"
+    "vite-plugin-solid": "^2.10.2",
+    "vitest": "^2.1.5"
   }
 }
