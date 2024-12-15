@@ -58,15 +58,15 @@ export const CodeArea: Component<{
 
 export const CodeDisplayArea: Component<{
   code: string;
-  style?: "normal" | "error";
+  variant?: "normal" | "error";
 }> = (_props) => {
-  const props = mergeProps({ style: "normal" }, _props);
+  const props = mergeProps({ variant: "normal" }, _props);
   return (
     <pre
       classList={{
         "code-area": true,
         "code-display-area": true,
-        [`code-display-area-${props.style}`]: true,
+        [`code-display-area-${props.variant}`]: true,
       }}
     >
       {props.code}

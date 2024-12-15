@@ -388,7 +388,7 @@ export default function App() {
           <div style={{ display: stderr() === "" ? "none" : "block" }}>
             <CodeDisplayArea
               code={stderr()}
-              style={compilingState().t === "succeed" ? "normal" : "error"}
+              variant={compilingState().t === "succeed" ? "normal" : "error"}
             />
           </div>
         </div>
@@ -429,7 +429,7 @@ export default function App() {
         </div>
         <Show when={bfError() !== ""}>
           <div class="pad-box">
-            <CodeDisplayArea code={bfError()} style={"error"} />
+            <CodeDisplayArea code={bfError()} variant={"error"} />
           </div>
         </Show>
         <div class="pad-box">
