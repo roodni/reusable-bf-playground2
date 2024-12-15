@@ -20,7 +20,7 @@ export const CodeArea: Component<{
   onUpdate?: (value: string) => void; // 値が更新されたときに発火。初回および外側から更新された場合も発火する
   onInput?: (event: InputEvent) => void;
 }> = (props) => {
-  let textarea: HTMLTextAreaElement;
+  let textarea!: HTMLTextAreaElement;
   createRenderEffect(() => {
     (props.ref as Exclude<typeof props.ref, CodeAreaAPI>)?.({
       value() {
@@ -43,7 +43,7 @@ export const CodeArea: Component<{
   };
   return (
     <textarea
-      ref={textarea!}
+      ref={textarea}
       onInput={handleInput}
       classList={{
         "code-area": true,

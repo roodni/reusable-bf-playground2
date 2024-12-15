@@ -47,7 +47,7 @@ export default function App() {
     ]),
   );
 
-  let bfmlEditorElement: HTMLDivElement;
+  let bfmlEditorElement!: HTMLDivElement;
   const [bfmlEditor, setBfmlEditor] = createSignal<ace.Ace.Editor | undefined>(
     undefined,
   );
@@ -76,7 +76,7 @@ export default function App() {
     (fileSettingsList.find((s) => s.selected) ?? fileSettingsList[0]).name,
   );
 
-  let fileSelect: HTMLSelectElement;
+  let fileSelect!: HTMLSelectElement;
   createEffect(() => {
     fileSelect.value = selectingFileName();
   });
@@ -105,7 +105,7 @@ export default function App() {
   // コンパイルに関すること
   const [stderr, setStderr] = createSignal("");
 
-  let bfAreaApi: CodeAreaAPI;
+  let bfAreaApi!: CodeAreaAPI;
   const [bfCode, _setBfCode] = createSignal("");
   const bfCodeSize = createMemo(() => {
     const code = bfCode();
@@ -196,7 +196,6 @@ export default function App() {
     setStderr("");
   };
 
-  const handleCompileClick = compile;
   const handleStopCompileClick = () => {
     if (compilingState().t === "compiling") {
       updateCompilingState({ t: "aborted" });
@@ -216,7 +215,7 @@ export default function App() {
   };
 
   // インタプリタに関すること
-  let bfInputAreaApi: CodeAreaAPI;
+  let bfInputAreaApi!: CodeAreaAPI;
   const [bfInput, _setBfInput] = createSignal("");
   const bfInputLines = createMemo(() => {
     const text = bfInput();
@@ -231,6 +230,9 @@ export default function App() {
     }
     return cnt;
   });
+
+  const [bfOutput] = createSignal("");
+  const runBf = () => {};
 
   // キーボードショートカット
   const [bfmlOrBf, setBfmlOrBf] = createSignal<"bfml" | "bf">("bfml");
@@ -264,10 +266,10 @@ export default function App() {
         }
       >
         <div class="editor-container">
-          <div ref={bfmlEditorElement!} class="editor" />
+          <div ref={bfmlEditorElement} class="editor" />
         </div>
         <div class="editor-button-container">
-          <select ref={fileSelect!} class="input" onChange={handleFileChange}>
+          <select ref={fileSelect} class="input" onChange={handleFileChange}>
             <For each={fileSettingsList}>
               {(setting) => (
                 <option value={setting.name}>{setting.name}</option>
@@ -276,7 +278,7 @@ export default function App() {
           </select>
           <button
             class="input"
-            onClick={handleCompileClick}
+            onClick={compile}
             disabled={compilingState().t === "compiling"}
           >
             {"Compile "}
@@ -333,7 +335,7 @@ export default function App() {
           brainf**k
           <Show when={bfCodeSize() >= 1}> ({bfCodeSize()} commands)</Show>
           <CodeArea
-            ref={bfAreaApi!}
+            ref={bfAreaApi}
             onUpdate={_setBfCode}
             onInput={handleBfAreaInput}
             defaultValue={bfCode()}
@@ -343,12 +345,12 @@ export default function App() {
         <div class="pad-box">
           Input ({bfInputLines()} lines)
           <CodeArea
-            ref={bfInputAreaApi!}
+            ref={bfInputAreaApi}
             onUpdate={_setBfInput}
             defaultValue={bfInput()}
           />
           <div class="input-button-container">
-            <button class="input">
+            <button class="input" onClick={runBf}>
               {"Run "}
               <span
                 classList={{
@@ -366,7 +368,7 @@ export default function App() {
         </div>
         <div class="pad-box">
           Output
-          <CodeDisplayArea code={selectingFileName()} />
+          <CodeDisplayArea code={bfOutput()} />
         </div>
       </div>
     </div>
