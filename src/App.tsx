@@ -11,7 +11,7 @@ import {
   Show,
   Switch,
 } from "solid-js";
-import { CodeArea, CodeAreaAPI, CodeDisplayArea } from "./Components";
+import { CodeArea, CodeAreaRef, CodeDisplayArea } from "./Components";
 import CompileWorker from "./assets/playground.bc.js?worker";
 import { FileSettings, fileSettingsList } from "./fileSettings";
 
@@ -105,7 +105,7 @@ export default function App() {
   // コンパイルに関すること
   const [stderr, setStderr] = createSignal("");
 
-  let bfAreaApi!: CodeAreaAPI;
+  let bfAreaRef!: CodeAreaRef;
   const [bfCode, _setBfCode] = createSignal("");
   const bfCodeSize = createMemo(() => {
     const code = bfCode();
@@ -167,7 +167,7 @@ export default function App() {
 
     worker.addEventListener("message", (res) => {
       setStderr(res.data.err);
-      bfAreaApi.update(res.data.out);
+      bfAreaRef.update(res.data.out);
       updateCompilingState({ t: res.data.success ? "succeed" : "failed" });
     });
     worker.addEventListener("error", (e) => {
@@ -192,7 +192,7 @@ export default function App() {
       maxLength: 1000000,
     });
 
-    bfAreaApi.update("");
+    bfAreaRef.update("");
     setStderr("");
   };
 
@@ -215,7 +215,7 @@ export default function App() {
   };
 
   // インタプリタに関すること
-  let bfInputAreaApi!: CodeAreaAPI;
+  let bfInputAreaRef!: CodeAreaRef;
   const [bfInput, _setBfInput] = createSignal("");
   const bfInputLines = createMemo(() => {
     const text = bfInput();
@@ -335,7 +335,7 @@ export default function App() {
           brainf**k
           <Show when={bfCodeSize() >= 1}> ({bfCodeSize()} commands)</Show>
           <CodeArea
-            ref={bfAreaApi}
+            ref={bfAreaRef}
             onUpdate={_setBfCode}
             onInput={handleBfAreaInput}
             defaultValue={bfCode()}
@@ -345,7 +345,7 @@ export default function App() {
         <div class="pad-box">
           Input ({bfInputLines()} lines)
           <CodeArea
-            ref={bfInputAreaApi}
+            ref={bfInputAreaRef}
             onUpdate={_setBfInput}
             defaultValue={bfInput()}
           />

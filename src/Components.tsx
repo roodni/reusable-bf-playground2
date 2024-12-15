@@ -9,12 +9,12 @@ import {
 const defaultRows = 8;
 
 // uncontrolled な編集可能テキストエリア
-export type CodeAreaAPI = {
+export type CodeAreaRef = {
   value: () => string;
   update: (value: string) => void;
 };
 export const CodeArea: Component<{
-  ref?: Ref<CodeAreaAPI>;
+  ref?: Ref<CodeAreaRef>;
   defaultValue?: string;
   disabled?: boolean;
   onUpdate?: (value: string) => void; // 値が更新されたときに発火。初回および外側から更新された場合も発火する
@@ -22,7 +22,7 @@ export const CodeArea: Component<{
 }> = (props) => {
   let textarea!: HTMLTextAreaElement;
   createRenderEffect(() => {
-    (props.ref as Exclude<typeof props.ref, CodeAreaAPI>)?.({
+    (props.ref as Exclude<typeof props.ref, CodeAreaRef>)?.({
       value() {
         return textarea.value;
       },
