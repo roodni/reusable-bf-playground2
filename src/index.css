@@ -137,11 +137,16 @@ body {
     source-code-pro, monospace;
   padding: 2px;
   display: block;
-  word-break: break-all;
 
   border-style: solid;
   border-width: 1px;
   border-color: gray;
+
+  /* 何が何でも改行したい */
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  line-break: anywhere;
+  white-space: break-spaces;
 }
 
 .code-input-area {
@@ -155,7 +160,6 @@ body {
 
 .code-display-area {
   margin: 0;
-  white-space: pre-wrap;
   min-height: 2.5rem;
   max-height: 70svh;
 }
