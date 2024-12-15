@@ -13,6 +13,8 @@ import {
 } from "solid-js";
 import { CodeArea, CodeAreaRef, CodeDisplayArea } from "./Components";
 import CompileWorker from "./assets/playground.bc.js?worker";
+import * as BfParser from "./bf/parser";
+import * as BfRunner from "./bf/runner";
 import { FileSettings, fileSettingsList } from "./fileSettings";
 
 // Ace Editorの設定をここに書く
@@ -231,8 +233,67 @@ export default function App() {
     return cnt;
   });
 
-  const [bfOutput] = createSignal("");
-  const runBf = () => {};
+  const [bfRunner, setBfRunner] = createSignal<BfRunner.Runner | undefined>(
+    undefined,
+  );
+  const [bfError, setBfError] = createSignal("");
+  const [bfOutput, setBfOutput] = createSignal("");
+
+  const handleBfRunnerEvent = (ev: BfRunner.RunnerEvent) => {
+    const runner = bfRunner();
+    if (!runner) {
+      return;
+    }
+    switch (ev.t) {
+      case "input":
+        // TODO: 追加入力を受け付ける
+        break;
+      case "output": {
+        // メモリ食いつぶし防止のため、出力文字数には制限を設ける
+        const output = (bfOutput() + ev.output).slice(-10000);
+        setBfOutput(output);
+        break;
+      }
+      case "finish":
+        setBfRunner(undefined);
+        break;
+      case "error":
+        if (ev.kind === "pointer") {
+          setBfError("Error: Pointer out of range");
+        }
+        setBfRunner(undefined);
+        break;
+    }
+  };
+
+  const runBf = () => {
+    setBfError("");
+    setBfOutput("");
+    const code = bfCode();
+    const parseResult = BfParser.parse(code);
+    if (parseResult.t === "error") {
+      const msg = `Syntax Error: ${parseResult.msg} (line ${parseResult.line}, col ${parseResult.col})`;
+      setBfError(msg);
+      return;
+    }
+
+    const runner = new BfRunner.Runner(
+      parseResult.commands,
+      bfInput(),
+      handleBfRunnerEvent,
+      {
+        mode: "utf8",
+      },
+    );
+    setBfRunner(runner);
+  };
+  const stopBf = () => {
+    const runner = bfRunner();
+    if (runner) {
+      runner.terminate();
+      setBfRunner(undefined);
+    }
+  };
 
   // キーボードショートカット
   const [bfmlOrBf, setBfmlOrBf] = createSignal<"bfml" | "bf">("bfml");
@@ -245,7 +306,7 @@ export default function App() {
       if (bfmlOrBf() === "bfml") {
         compile();
       } else {
-        // run bf
+        runBf();
       }
     }
   };
@@ -350,7 +411,7 @@ export default function App() {
             defaultValue={bfInput()}
           />
           <div class="input-button-container">
-            <button class="input" onClick={runBf}>
+            <button class="input" onClick={runBf} disabled={!!bfRunner()}>
               {"Run "}
               <span
                 classList={{
@@ -361,11 +422,16 @@ export default function App() {
                 ({ctrlEnter})
               </span>
             </button>
-            <button class="input" disabled>
+            <button class="input" onClick={stopBf} disabled={!bfRunner()}>
               Stop
             </button>
           </div>
         </div>
+        <Show when={bfError() !== ""}>
+          <div class="pad-box">
+            <CodeDisplayArea code={bfError()} style={"error"} />
+          </div>
+        </Show>
         <div class="pad-box">
           Output
           <CodeDisplayArea code={bfOutput()} />

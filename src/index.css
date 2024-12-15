@@ -138,7 +138,6 @@ body {
   padding: 2px;
   display: block;
   word-break: break-all;
-  overflow-y: scroll;
 
   border-style: solid;
   border-width: 1px;
@@ -147,6 +146,7 @@ body {
 
 .code-input-area {
   resize: vertical;
+  overflow-y: scroll;
 }
 
 .code-input-area-disabled {
@@ -163,6 +163,7 @@ body {
 .code-display-area-normal {
   border-color: lightgray;
   background-color: whitesmoke;
+  overflow-y: scroll;
 }
 
 .code-display-area-error {

@@ -1,17 +1,17 @@
-export type BfCommand =
+export type Command =
   | { t: "add"; n: number }
   | { t: "shift"; n: number }
   | { t: "output" }
   | { t: "input" }
-  | { t: "loop"; commands: BfCommand[] };
+  | { t: "loop"; commands: Command[] };
 
 export type ParseResult =
-  | { t: "succeed"; commands: BfCommand[] }
+  | { t: "succeed"; commands: Command[] }
   | { t: "error"; msg: string; line: number; col: number };
 
 export function parse(code: string): ParseResult {
   type Stack = {
-    commands: BfCommand[];
+    commands: Command[];
     loopBegin: { line: number; col: number } | undefined;
   };
   const stack: Stack[] = [{ commands: [], loopBegin: undefined }];
