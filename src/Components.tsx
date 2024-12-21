@@ -69,7 +69,7 @@ export const CodeDisplayArea: Component<{
       classList={{
         "code-area": true,
         "code-display-area": true,
-        [`code-display-area-${props.variant}`]: true,
+        [`code-display-area-variant-${props.variant}`]: true,
       }}
     >
       {props.code}

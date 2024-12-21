@@ -13,8 +13,10 @@ export type FileSettings = {
 export const fileSettingsList: FileSettings[] = [
   {
     name: "sandbox.bfml",
-    code: `let rec f () = f ();;
+    code: `open import "std.bfml"
+let rec f () = f ();;
 let main = [
+  *gen_puts "HELLO\\n"
   
 ]`,
     selected: true,

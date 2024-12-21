@@ -192,13 +192,17 @@ body {
   max-height: 70svh;
 }
 
-.code-display-area-normal {
+.code-display-area-variant-normal {
   border-color: lightgray;
   background-color: whitesmoke;
   overflow-y: scroll;
 }
+.code-display-area-variant-normal::after {
+  content: "↵";
+  opacity: 50%;
+}
 
-.code-display-area-error {
+.code-display-area-variant-error {
   border-color: lightgray;
   background-color: pink;
 }
