@@ -188,18 +188,21 @@ body {
 
 .code-display-area {
   margin: 0;
-  min-height: 2.5rem;
   max-height: 70svh;
+}
+
+.code-display-area-empty::before {
+  content: " ";
+}
+.code-display-area-show-eof::after {
+  content: "[EOF]";
+  opacity: 50%;
 }
 
 .code-display-area-variant-normal {
   border-color: lightgray;
   background-color: whitesmoke;
   overflow-y: scroll;
-}
-.code-display-area-variant-normal::after {
-  content: "↵";
-  opacity: 50%;
 }
 
 .code-display-area-variant-error {

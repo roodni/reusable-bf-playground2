@@ -62,6 +62,7 @@ export const CodeArea: Component<{
 export const CodeDisplayArea: Component<{
   code: string;
   variant?: "normal" | "error";
+  showEof?: boolean;
 }> = (_props) => {
   const props = mergeProps({ variant: "normal" }, _props);
   return (
@@ -70,6 +71,8 @@ export const CodeDisplayArea: Component<{
         "code-area": true,
         "code-display-area": true,
         [`code-display-area-variant-${props.variant}`]: true,
+        "code-display-area-show-eof": props.showEof,
+        "code-display-area-empty": !props.showEof && props.code === "",
       }}
     >
       {props.code}

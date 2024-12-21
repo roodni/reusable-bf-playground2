@@ -482,7 +482,7 @@ export default function App() {
         </Show>
         <div>
           Output
-          <CodeDisplayArea code={bfOutput()} />
+          <CodeDisplayArea code={bfOutput()} showEof={!isBfRunning()} />
         </div>
       </div>
     </div>
