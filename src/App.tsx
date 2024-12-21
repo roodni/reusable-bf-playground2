@@ -278,6 +278,9 @@ export default function App() {
   };
 
   const runBf = () => {
+    if (isBfRunning()) {
+      return;
+    }
     setBfError("");
     setBfOutput("");
     const code = bfCode();
