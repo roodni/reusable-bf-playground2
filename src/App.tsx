@@ -245,6 +245,7 @@ export default function App() {
   const [bfOutput, setBfOutput] = createSignal("");
 
   const afterBfTerminated = () => {
+    setIsBfInputRequired(false);
     _setBfRunner(undefined);
   };
 
@@ -457,27 +458,28 @@ export default function App() {
             </button>
           </div>
         </div>
-        <Show when={isBfRunning() && isBfInputRequired()}>
-          <div>
-            <label>Interactive Input</label>
-            <div class="interactive-inputs-container">
-              <input
-                type="text"
-                ref={bfInteractiveInputRef}
-                spellcheck={false}
-                onKeyDown={handleBfInteractiveInputKeyDown}
-                class="input interactive-input"
-              />
-              <button
-                class="input"
-                disabled={!isBfInputRequired()}
-                onClick={submitBfInteractiveInput}
-              >
-                Enter
-              </button>
-            </div>
+
+        <div>
+          <label>Interactive Input</label>
+          <div class="interactive-inputs-container">
+            <input
+              type="text"
+              ref={bfInteractiveInputRef}
+              spellcheck={false}
+              onKeyDown={handleBfInteractiveInputKeyDown}
+              disabled={!isBfInputRequired()}
+              class="input interactive-input"
+            />
+            <button
+              class="input"
+              disabled={!isBfInputRequired()}
+              onClick={submitBfInteractiveInput}
+            >
+              Enter
+            </button>
           </div>
-        </Show>
+        </div>
+
         <Show when={bfError() !== ""}>
           <div>
             <CodeDisplayArea code={bfError()} variant={"error"} />
