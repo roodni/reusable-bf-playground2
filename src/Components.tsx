@@ -17,6 +17,7 @@ export const CodeArea: Component<{
   ref?: Ref<CodeAreaRef>;
   defaultValue?: string;
   disabled?: boolean;
+  readonly?: boolean;
   onUpdate?: (value: string) => void; // 値が更新されたときに発火。初回および外側から更新された場合も発火する
   onInput?: (event: InputEvent) => void;
 }> = (props) => {
@@ -45,6 +46,7 @@ export const CodeArea: Component<{
     <textarea
       ref={textarea}
       onInput={handleInput}
+      spellcheck={false}
       classList={{
         "code-area": true,
         "code-input-area": true,
@@ -52,6 +54,7 @@ export const CodeArea: Component<{
       }}
       rows={defaultRows}
       disabled={props.disabled}
+      readOnly={props.readonly}
     />
   );
 };

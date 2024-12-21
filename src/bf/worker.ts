@@ -65,6 +65,7 @@ addEventListener("message", (event: MessageEvent<MessageToWorker>) => {
         throw new Error("unexpected input");
       }
       inputs = message.inputs;
+      inputIndex = 0;
     }
     run();
   }

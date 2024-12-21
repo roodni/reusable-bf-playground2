@@ -233,20 +233,26 @@ export default function App() {
     return cnt;
   });
 
-  const [bfRunner, setBfRunner] = createSignal<BfRunner.Runner | undefined>(
+  let bfInteractiveInputRef!: HTMLInputElement;
+
+  // この辺煩雑なのでストアでうまくまとめたい
+  const [bfRunner, _setBfRunner] = createSignal<BfRunner.Runner | undefined>(
     undefined,
   );
+  const isBfRunning = () => bfRunner() !== undefined;
+  const [isBfInputRequired, setIsBfInputRequired] = createSignal(false);
   const [bfError, setBfError] = createSignal("");
   const [bfOutput, setBfOutput] = createSignal("");
 
+  const afterBfTerminated = () => {
+    _setBfRunner(undefined);
+  };
+
   const handleBfRunnerEvent = (ev: BfRunner.RunnerEvent) => {
-    const runner = bfRunner();
-    if (!runner) {
-      return;
-    }
     switch (ev.t) {
       case "input":
-        // TODO: 追加入力を受け付ける
+        setIsBfInputRequired(true);
+        bfInteractiveInputRef.focus();
         break;
       case "output": {
         // メモリ食いつぶし防止のため、出力文字数には制限を設ける
@@ -255,13 +261,18 @@ export default function App() {
         break;
       }
       case "finish":
-        setBfRunner(undefined);
+        afterBfTerminated();
         break;
       case "error":
-        if (ev.kind === "pointer") {
-          setBfError("Error: Pointer out of range");
+        switch (ev.kind) {
+          case "pointer":
+            setBfError("Error: Pointer out of range");
+            break;
+          case "fatal":
+            setBfError("Fatal error");
+            break;
         }
-        setBfRunner(undefined);
+        afterBfTerminated();
         break;
     }
   };
@@ -277,21 +288,38 @@ export default function App() {
       return;
     }
 
+    const input = bfInput();
     const runner = new BfRunner.Runner(
       parseResult.commands,
-      bfInput(),
+      input,
       handleBfRunnerEvent,
       {
         mode: "utf8",
       },
     );
-    setBfRunner(runner);
+    _setBfRunner(runner);
+    setIsBfInputRequired(false);
   };
   const stopBf = () => {
     const runner = bfRunner();
     if (runner) {
       runner.terminate();
-      setBfRunner(undefined);
+      afterBfTerminated();
+    }
+  };
+  const submitBfInteractiveInput = () => {
+    const runner = bfRunner();
+    if (!runner || !isBfInputRequired()) {
+      return;
+    }
+    const i = bfInteractiveInputRef.value + "\n";
+    bfInteractiveInputRef.value = "";
+    runner.input(i);
+    setIsBfInputRequired(false);
+  };
+  const handleBfInteractiveInputKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Enter") {
+      submitBfInteractiveInput();
     }
   };
 
@@ -314,22 +342,20 @@ export default function App() {
   return (
     <div class="app" onKeyDown={handleAppKeyDown}>
       {/* ヘッダー */}
-      <div class="header pad-box">
+      <div class="header pad-y pad-x">
         <div class="t">Reusable-bf Playground</div>
       </div>
 
       {/* 左 */}
       <div
-        class="l pad-box"
+        class="l pad-y pad-x"
         onMouseDown={
           // 配列で指定すると型検査が効かない気がする
           () => setBfmlOrBf("bfml")
         }
       >
-        <div class="editor-container">
-          <div ref={bfmlEditorElement} class="editor" />
-        </div>
-        <div class="editor-button-container">
+        <div ref={bfmlEditorElement} class="editor" />
+        <div class="editor-buttons-container">
           <select ref={fileSelect} class="input" onChange={handleFileChange}>
             <For each={fileSettingsList}>
               {(setting) => (
@@ -363,8 +389,8 @@ export default function App() {
       </div>
 
       {/* 右 */}
-      <div class="r" onMouseDown={() => setBfmlOrBf("bf")}>
-        <div class="pad-box">
+      <div class="r pad-y pad-x" onMouseDown={() => setBfmlOrBf("bf")}>
+        <div>
           <Switch>
             <Match when={compilingState().t === "ready"}>Ready</Match>
             <Match when={compilingState().t === "compiling"}>
@@ -392,7 +418,7 @@ export default function App() {
             />
           </div>
         </div>
-        <div class="pad-box">
+        <div>
           brainf**k
           <Show when={bfCodeSize() >= 1}> ({bfCodeSize()} commands)</Show>
           <CodeArea
@@ -403,15 +429,16 @@ export default function App() {
             disabled={compilingState().t === "compiling"}
           />
         </div>
-        <div class="pad-box">
+        <div>
           Input ({bfInputLines()} lines)
           <CodeArea
             ref={bfInputAreaRef}
             onUpdate={_setBfInput}
             defaultValue={bfInput()}
+            readonly={isBfRunning()}
           />
-          <div class="input-button-container">
-            <button class="input" onClick={runBf} disabled={!!bfRunner()}>
+          <div class="input-buttons-container">
+            <button class="input" onClick={runBf} disabled={isBfRunning()}>
               {"Run "}
               <span
                 classList={{
@@ -422,17 +449,38 @@ export default function App() {
                 ({ctrlEnter})
               </span>
             </button>
-            <button class="input" onClick={stopBf} disabled={!bfRunner()}>
+            <button class="input" onClick={stopBf} disabled={!isBfRunning()}>
               Stop
             </button>
           </div>
         </div>
+        <Show when={isBfRunning() && isBfInputRequired()}>
+          <div>
+            <label>Interactive Input</label>
+            <div class="interactive-inputs-container">
+              <input
+                type="text"
+                ref={bfInteractiveInputRef}
+                spellcheck={false}
+                onKeyDown={handleBfInteractiveInputKeyDown}
+                class="input interactive-input"
+              />
+              <button
+                class="input"
+                disabled={!isBfInputRequired()}
+                onClick={submitBfInteractiveInput}
+              >
+                Enter
+              </button>
+            </div>
+          </div>
+        </Show>
         <Show when={bfError() !== ""}>
-          <div class="pad-box">
+          <div>
             <CodeDisplayArea code={bfError()} variant={"error"} />
           </div>
         </Show>
-        <div class="pad-box">
+        <div>
           Output
           <CodeDisplayArea code={bfOutput()} />
         </div>

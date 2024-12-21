@@ -49,7 +49,7 @@ export type RunnerEvent =
     }
   | {
       t: "error";
-      kind: "pointer";
+      kind: "pointer" | "fatal";
     };
 
 export class Runner {
@@ -108,6 +108,7 @@ export class Runner {
     this.worker.addEventListener("error", (ev) => {
       console.log("worker stopped for some reason", ev);
       this.worker.terminate();
+      handler({ t: "error", kind: "fatal" });
     });
     const inputs = this.textCodec.encode(initialInput);
     const msg: MessageToWorker = {

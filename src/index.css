@@ -1,4 +1,8 @@
 /* 小規模だからCSSは一枚でいいかと思った */
+:root {
+  --pad: 4px;
+}
+
 body {
   margin: 0;
 }
@@ -14,8 +18,14 @@ body {
   font-size: 1rem;
 }
 
-.pad-box {
-  padding: 4px;
+.pad-y {
+  padding-top: var(--pad);
+  padding-bottom: var(--pad);
+}
+
+.pad-x {
+  padding-left: var(--pad);
+  padding-right: var(--pad);
 }
 
 /* App */
@@ -81,23 +91,16 @@ body {
   }
 }
 
-.app > .l {
-  display: grid;
-  grid-template-rows: 1fr max-content;
-}
-
-.editor-container {
-  height: 100%;
-}
-
-.editor-button-container {
-  width: 100%;
-  padding-top: 4px;
-
-  display: flex;
-  flex-wrap: wrap;
-  > * {
-    flex: 1;
+.app {
+  > .l {
+    display: grid;
+    grid-template-rows: 1fr max-content;
+    /* gap: var(--pad); */
+  }
+  > .r {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pad);
   }
 }
 
@@ -110,13 +113,34 @@ body {
   border-color: darkgray;
 }
 
-.input-button-container {
+.editor-buttons-container {
   width: 100%;
-  padding-top: 4px;
+
+  display: flex;
+  flex-wrap: wrap;
+  > * {
+    flex: 1;
+  }
+}
+
+.input-buttons-container {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  > * {
+    flex: 1;
+  }
+}
+
+.interactive-inputs-container {
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
   > * {
     flex: auto;
+  }
+  > button {
+    flex: initial;
   }
 }
 
@@ -130,11 +154,15 @@ body {
 
 /* Components */
 
+.interactive-input,
 .code-area {
-  width: 100%;
-  font-size: 14px;
+  font-size: 16px;
   font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, "Source Code Pro",
     source-code-pro, monospace;
+}
+
+.code-area {
+  width: 100%;
   padding: 2px;
   display: block;
 
