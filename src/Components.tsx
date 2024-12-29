@@ -20,6 +20,7 @@ export const CodeArea: Component<{
   readonly?: boolean;
   onUpdate?: (value: string) => void; // 値が更新されたときに発火。初回および外側から更新された場合も発火する
   onInput?: (event: InputEvent) => void;
+  id?: string;
 }> = (props) => {
   let textarea!: HTMLTextAreaElement;
   createRenderEffect(() => {
@@ -55,6 +56,7 @@ export const CodeArea: Component<{
       rows={defaultRows}
       disabled={props.disabled}
       readOnly={props.readonly}
+      id={props.id}
     />
   );
 };

@@ -423,9 +423,10 @@ export default function App() {
           </div>
         </div>
         <div>
-          brainf**k
+          <label for="bf-code">brainf**k</label>
           <Show when={bfCodeSize() >= 1}> ({bfCodeSize()} commands)</Show>
           <CodeArea
+            id="bf-code"
             ref={bfAreaRef}
             onUpdate={_setBfCode}
             onInput={handleBfAreaInput}
@@ -434,8 +435,9 @@ export default function App() {
           />
         </div>
         <div>
-          Input ({bfInputLines()} lines)
+          <label for="bf-input">Input</label> ({bfInputLines()} lines)
           <CodeArea
+            id="bf-input"
             ref={bfInputAreaRef}
             onUpdate={_setBfInput}
             defaultValue={bfInput()}
@@ -460,9 +462,10 @@ export default function App() {
         </div>
 
         <div>
-          <label>Interactive Input</label>
+          <label for="interactive-input">Interactive Input</label>
           <div class="interactive-inputs-container">
             <input
+              id="interactive-input"
               type="text"
               ref={bfInteractiveInputRef}
               spellcheck={false}
