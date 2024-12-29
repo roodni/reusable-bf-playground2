@@ -28,6 +28,7 @@ class Utf8Codec implements TextCodec {
 }
 
 class Utf16Codec implements TextCodec {
+  // TODO: 絵文字をうまく扱えない気がするので検証
   encode(s: string) {
     return [...s].map((c) => c.charCodeAt(0));
   }
