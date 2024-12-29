@@ -321,10 +321,9 @@ export default function App() {
     runner.input(i);
     setIsBfInputRequired(false);
   };
-  const handleBfInteractiveInputKeyDown = (event: KeyboardEvent) => {
-    if (event.key === "Enter") {
-      submitBfInteractiveInput();
-    }
+  const handleSubmitBfInteractiveInput = (ev: SubmitEvent) => {
+    submitBfInteractiveInput();
+    ev.preventDefault();
   };
 
   // キーボードショートカット
@@ -461,7 +460,7 @@ export default function App() {
           </div>
         </div>
 
-        <div>
+        <form onSubmit={handleSubmitBfInteractiveInput}>
           <label for="interactive-input">Interactive Input</label>
           <div class="interactive-inputs-container">
             <input
@@ -469,19 +468,14 @@ export default function App() {
               type="text"
               ref={bfInteractiveInputRef}
               spellcheck={false}
-              onKeyDown={handleBfInteractiveInputKeyDown}
               disabled={!isBfInputRequired()}
               class="input interactive-input"
             />
-            <button
-              class="input"
-              disabled={!isBfInputRequired()}
-              onClick={submitBfInteractiveInput}
-            >
+            <button type="submit" class="input" disabled={!isBfInputRequired()}>
               Enter
             </button>
           </div>
-        </div>
+        </form>
 
         <Show when={bfError() !== ""}>
           <div>
