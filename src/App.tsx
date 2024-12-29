@@ -11,6 +11,7 @@ import {
   Show,
   Switch,
 } from "solid-js";
+import { createStore } from "solid-js/store";
 import { CodeArea, CodeAreaRef, CodeDisplayArea } from "./Components";
 import CompileWorker from "./assets/playground.bc.js?worker";
 import * as BfParser from "./bf/parser";
@@ -327,23 +328,22 @@ export default function App() {
   };
 
   // キーボードショートカット
-  const [bfmlOrBf, setBfmlOrBf] = createSignal<"bfml" | "bf">("bfml");
-  const handleAppKeyDown = (event: KeyboardEvent) => {
+  const [focuses, setFocuses] = createStore({
+    left: false,
+    right: false,
+  });
+  const handleCtrlEnter = (event: KeyboardEvent, fn: () => void) => {
     if (
       event.key === "Enter" &&
       (event.ctrlKey || event.metaKey) &&
       !event.repeat
     ) {
-      if (bfmlOrBf() === "bfml") {
-        compile();
-      } else {
-        runBf();
-      }
+      fn();
     }
   };
 
   return (
-    <div class="app" onKeyDown={handleAppKeyDown}>
+    <div class="app">
       {/* ヘッダー */}
       <div class="header pad-y pad-x">
         <div class="t">Reusable-bf Playground</div>
@@ -352,10 +352,9 @@ export default function App() {
       {/* 左 */}
       <div
         class="l pad-y pad-x"
-        onMouseDown={
-          // 配列で指定すると型検査が効かない気がする
-          () => setBfmlOrBf("bfml")
-        }
+        onKeyDown={(ev) => handleCtrlEnter(ev, compile)}
+        onFocusIn={() => setFocuses("left", true)}
+        onFocusOut={() => setFocuses("left", false)}
       >
         <div ref={bfmlEditorElement} class="editor" />
         <div class="editor-buttons-container">
@@ -375,7 +374,7 @@ export default function App() {
             <span
               classList={{
                 shortcut: true,
-                "shortcut-disabled": bfmlOrBf() !== "bfml",
+                "shortcut-disabled": !focuses.left,
               }}
             >
               ({ctrlEnter})
@@ -392,7 +391,12 @@ export default function App() {
       </div>
 
       {/* 右 */}
-      <div class="r pad-y pad-x" onMouseDown={() => setBfmlOrBf("bf")}>
+      <div
+        class="r pad-y pad-x"
+        onKeyDown={(ev) => handleCtrlEnter(ev, runBf)}
+        onFocusIn={() => setFocuses("right", true)}
+        onFocusOut={() => setFocuses("right", false)}
+      >
         <div>
           <Switch>
             <Match when={compilingState().t === "ready"}>Ready</Match>
@@ -448,7 +452,7 @@ export default function App() {
               <span
                 classList={{
                   shortcut: true,
-                  "shortcut-disabled": bfmlOrBf() !== "bf",
+                  "shortcut-disabled": !focuses.right,
                 }}
               >
                 ({ctrlEnter})
