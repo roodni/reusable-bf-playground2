@@ -469,6 +469,7 @@ export default function App() {
               ref={bfInteractiveInputRef}
               spellcheck={false}
               disabled={!isBfInputRequired()}
+              autocomplete="off"
               class="input interactive-input"
             />
             <button type="submit" class="input" disabled={!isBfInputRequired()}>
