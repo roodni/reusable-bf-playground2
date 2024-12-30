@@ -64,6 +64,38 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
     });
     expect(output).toBe(want);
   });
+
+  test.each(tc.io.filter(([input]) => input !== ""))(
+    "#%# インタラクティブ入力",
+    async (input, want) => {
+      const output = await new Promise<string>((resolve, reject) => {
+        const ibuf = [...input];
+        let obuf = "";
+
+        let runner: Runner;
+        const handler = (ev: RunnerEvent) => {
+          if (ev.t === "input") {
+            const c = ibuf.shift();
+            if (c === undefined) {
+              reject("eof");
+              return;
+            }
+            runner.input(c);
+          } else if (ev.t === "output") {
+            obuf += ev.output;
+          } else if (ev.t === "finish") {
+            resolve(obuf);
+          } else if (ev.t === "error") {
+            reject(ev.kind);
+          }
+        };
+        runner = new Runner(commands, "", handler, {
+          mode: "utf8",
+        });
+      });
+      expect(output).toBe(want);
+    },
+  );
 });
 
 describe("ポインタ範囲外エラーが発生する", () => {
