@@ -32,6 +32,11 @@ const testCases: TestCase[] = [
       ["\n", "OTHER"],
     ],
   },
+  {
+    label: "エラーが発生しなければOK",
+    code: "[-<+>]",
+    io: [["", ""]],
+  },
 ];
 
 describe.each(testCases)("実行できる ($label)", (tc) => {
@@ -58,5 +63,30 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
       });
     });
     expect(output).toBe(want);
+  });
+});
+
+describe("ポインタ範囲外エラーが発生する", () => {
+  test.each(["<", "+[>+]", "+[-<+>]"])("%s", async (code) => {
+    const res = parse(code);
+    if (res.t === "error") {
+      expect.fail(res.msg);
+    }
+    const commands = optimize(res.commands);
+
+    const promise = new Promise<void>((resolve, reject) => {
+      const handler = (ev: RunnerEvent) => {
+        if (ev.t === "error" && ev.kind === "pointer") {
+          resolve();
+        } else {
+          reject();
+        }
+      };
+      new Runner(commands, "", handler, {
+        mode: "utf8",
+      });
+    });
+
+    await expect(promise).resolves.toBeUndefined();
   });
 });
