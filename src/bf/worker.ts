@@ -131,13 +131,14 @@ function run() {
       case "move": {
         const n = tape[ptr];
         if (n !== 0) {
-          for (const { index, coef } of command.dest) {
-            const i = ptr + index;
-            if (i < 0 || tape.length <= i) {
+          for (let i = 0; i < command.dest.length; i++) {
+            const { index, coef } = command.dest[i];
+            const p = ptr + index;
+            if (p < 0 || tape.length <= p) {
               post({ t: "error", kind: "pointer" });
               return;
             }
-            tape[i] += n * coef;
+            tape[p] += n * coef;
           }
           tape[ptr] = 0;
         }

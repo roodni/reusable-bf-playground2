@@ -245,10 +245,10 @@ export default function App() {
   const [isBfInputRequired, setIsBfInputRequired] = createSignal(false);
   const [bfError, setBfError] = createSignal("");
   const [bfOutput, setBfOutput] = createSignal("");
-  let bfStartTime = 0;
+  // let bfStartTime = 0;
 
   const afterBfTerminated = () => {
-    console.log("%f seconds", (Date.now() - bfStartTime) / 1000);
+    // console.log("%f seconds", (Date.now() - bfStartTime) / 1000);
     setIsBfInputRequired(false);
     _setBfRunner(undefined);
   };
@@ -304,7 +304,7 @@ export default function App() {
     });
     _setBfRunner(runner);
     setIsBfInputRequired(false);
-    bfStartTime = Date.now();
+    // bfStartTime = Date.now();
   };
   const stopBf = () => {
     const runner = bfRunner();
