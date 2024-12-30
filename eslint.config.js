@@ -15,7 +15,7 @@ export default ts.config(
     extends: [...ts.configs.recommended, solid],
     rules: {
       eqeqeq: "error",
-      "no-unused-vars": [
+      "@typescript-eslint/no-unused-vars": [
         "error",
         {
           argsIgnorePattern: "^_",
