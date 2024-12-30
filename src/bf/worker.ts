@@ -1,11 +1,11 @@
-import type { Command } from "./parser";
+import type { OptimizedCommand } from "./optimizer";
 
 export type CellType = "uint8" | "uint16";
 export type MessageToWorker =
   | {
       t: "start";
       cellType: CellType;
-      commands: Command[];
+      commands: OptimizedCommand[];
       inputs: number[];
     }
   | {
@@ -31,7 +31,7 @@ export type MessageFromWorker =
 
 type Stacked = {
   index: number;
-  commands: Command[];
+  commands: OptimizedCommand[];
 };
 let stack: Stacked[];
 
@@ -107,6 +107,20 @@ function run() {
     } else if (command.t === "loop") {
       if (tape[ptr] !== 0) {
         stack.push({ index: 0, commands: command.commands });
+      }
+      stacked.index++;
+    } else if (command.t === "move") {
+      const n = tape[ptr];
+      if (n !== 0) {
+        for (const { index, coef } of command.dest) {
+          const i = ptr + index;
+          if (i < 0 || tape.length <= i) {
+            post({ t: "error", kind: "pointer" });
+            return;
+          }
+          tape[i] += n * coef;
+        }
+        tape[ptr] = 0;
       }
       stacked.index++;
     } else if (command.t === "output") {

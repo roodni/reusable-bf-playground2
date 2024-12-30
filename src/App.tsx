@@ -14,6 +14,7 @@ import {
 import { createStore } from "solid-js/store";
 import { CodeArea, CodeAreaRef, CodeDisplayArea } from "./Components";
 import CompileWorker from "./assets/playground.bc.js?worker";
+import * as BfOptimizer from "./bf/optimizer";
 import * as BfParser from "./bf/parser";
 import * as BfRunner from "./bf/runner";
 import { FileSettings, fileSettingsList } from "./fileSettings";
@@ -236,7 +237,7 @@ export default function App() {
 
   let bfInteractiveInputRef!: HTMLInputElement;
 
-  // この辺煩雑なのでストアでうまくまとめたい
+  // この辺煩雑なのでどうにかしたい
   const [bfRunner, _setBfRunner] = createSignal<BfRunner.Runner | undefined>(
     undefined,
   );
@@ -244,8 +245,10 @@ export default function App() {
   const [isBfInputRequired, setIsBfInputRequired] = createSignal(false);
   const [bfError, setBfError] = createSignal("");
   const [bfOutput, setBfOutput] = createSignal("");
+  let bfStartTime = 0;
 
   const afterBfTerminated = () => {
+    console.log("%f seconds", (Date.now() - bfStartTime) / 1000);
     setIsBfInputRequired(false);
     _setBfRunner(undefined);
   };
@@ -293,17 +296,15 @@ export default function App() {
       return;
     }
 
+    const optimized = BfOptimizer.optimize(parseResult.commands);
+    // const optimized = parseResult.commands;
     const input = bfInput();
-    const runner = new BfRunner.Runner(
-      parseResult.commands,
-      input,
-      handleBfRunnerEvent,
-      {
-        mode: "utf8",
-      },
-    );
+    const runner = new BfRunner.Runner(optimized, input, handleBfRunnerEvent, {
+      mode: "utf8",
+    });
     _setBfRunner(runner);
     setIsBfInputRequired(false);
+    bfStartTime = Date.now();
   };
   const stopBf = () => {
     const runner = bfRunner();

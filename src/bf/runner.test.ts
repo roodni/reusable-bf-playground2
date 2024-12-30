@@ -1,5 +1,6 @@
 import "@vitest/web-worker";
 import { describe, expect, test } from "vitest";
+import { optimize } from "./optimizer";
 import { parse } from "./parser";
 import { Runner, RunnerEvent } from "./runner";
 
@@ -38,6 +39,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
   if (res.t === "error") {
     expect.fail(res.msg);
   }
+  const commands = optimize(res.commands);
 
   test.each(tc.io)("#%# 出力が正しい", async (input, want) => {
     const output = await new Promise<string>((resolve, reject) => {
@@ -51,7 +53,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
           reject(ev.kind);
         }
       };
-      new Runner(res.commands, input, handler, {
+      new Runner(commands, input, handler, {
         mode: "utf8",
       });
     });

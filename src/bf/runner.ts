@@ -1,4 +1,4 @@
-import { Command } from "./parser";
+import type { OptimizedCommand } from "./optimizer";
 import type { CellType, MessageFromWorker, MessageToWorker } from "./worker";
 import BfWorker from "./worker?worker";
 
@@ -59,7 +59,7 @@ export class Runner {
   private isInputRequired = false;
 
   constructor(
-    commands: Command[],
+    commands: OptimizedCommand[],
     initialInput: string,
     handler: (e: RunnerEvent) => void,
     configs: Configs,
