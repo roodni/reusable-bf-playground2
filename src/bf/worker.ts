@@ -76,65 +76,73 @@ function post(message: MessageFromWorker) {
 }
 
 function run() {
-  // console.log(stack.at(-1), ptr);
+  let stacked = stack[stack.length - 1];
   while (true) {
-    const stacked = stack.at(-1);
-    if (!stacked) {
-      post({ t: "finish" });
-      return;
-    }
-
-    if (stacked.index === stacked.commands.length) {
-      if (tape[ptr] === 0 || stack.length === 1) {
-        stack.pop();
-      } else {
+    while (stacked.index === stacked.commands.length) {
+      if (stack.length === 1) {
+        post({ t: "finish" });
+        return;
+      } else if (tape[ptr] !== 0) {
         stacked.index = 0;
+      } else {
+        stack.pop();
+        stacked = stack[stack.length - 1];
       }
-      continue;
     }
 
-    const command = stacked.commands[stacked.index];
-    if (command.t === "add") {
-      tape[ptr] += command.n;
-      stacked.index++;
-    } else if (command.t === "shift") {
-      ptr += command.n;
-      if (ptr < 0 || tape.length <= ptr) {
-        post({ t: "error", kind: "pointer" });
-        return;
-      }
-      stacked.index++;
-    } else if (command.t === "loop") {
-      if (tape[ptr] !== 0) {
-        stack.push({ index: 0, commands: command.commands });
-      }
-      stacked.index++;
-    } else if (command.t === "move") {
-      const n = tape[ptr];
-      if (n !== 0) {
-        for (const { index, coef } of command.dest) {
-          const i = ptr + index;
-          if (i < 0 || tape.length <= i) {
-            post({ t: "error", kind: "pointer" });
-            return;
-          }
-          tape[i] += n * coef;
-        }
-        tape[ptr] = 0;
-      }
-      stacked.index++;
-    } else if (command.t === "output") {
-      stacked.index++;
-      post({ t: "output", outputs: [tape[ptr]] });
-      return; // 出力を一方的に送り付けるのではなく、メインスレッドからの返事を待機する
-    } else if (command.t === "input") {
-      if (inputIndex < inputs.length) {
-        tape[ptr] = inputs[inputIndex];
-        inputIndex++;
+    const command: OptimizedCommand = stacked.commands[stacked.index];
+    switch (command.t) {
+      case "add":
+        tape[ptr] += command.n;
         stacked.index++;
-      } else {
-        post({ t: "input" });
+        break;
+      case "shift":
+        ptr += command.n;
+        if (ptr < 0 || tape.length <= ptr) {
+          post({ t: "error", kind: "pointer" });
+          return;
+        }
+        stacked.index++;
+        break;
+      case "output":
+        // 出力を一方的に送り付けるのではなく、メインスレッドからの返事を待機する
+        stacked.index++;
+        post({ t: "output", outputs: [tape[ptr]] });
         return;
+      case "input":
+        if (inputIndex < inputs.length) {
+          tape[ptr] = inputs[inputIndex];
+          inputIndex++;
+          stacked.index++;
+        } else {
+          post({ t: "input" });
+          return;
+        }
+        break;
+      case "loop":
+        if (tape[ptr] !== 0) {
+          stacked.index++;
+          stacked = { index: 0, commands: command.commands };
+          stack.push(stacked);
+        } else {
+          stacked.index++;
+        }
+        break;
+      case "move": {
+        const n = tape[ptr];
+        if (n !== 0) {
+          for (const { index, coef } of command.dest) {
+            const i = ptr + index;
+            if (i < 0 || tape.length <= i) {
+              post({ t: "error", kind: "pointer" });
+              return;
+            }
+            tape[i] += n * coef;
+          }
+          tape[ptr] = 0;
+        }
+        stacked.index++;
+        break;
       }
     }
   }

@@ -21,6 +21,7 @@ export default ts.config(
           argsIgnorePattern: "^_",
         },
       ],
+      "prefer-const": "off",
     },
   },
 );
