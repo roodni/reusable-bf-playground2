@@ -42,7 +42,7 @@ let ptr: number;
 let inputs: number[];
 let inputIndex: number;
 
-addEventListener("message", (event: MessageEvent<MessageToWorker>) => {
+self.addEventListener("message", (event: MessageEvent<MessageToWorker>) => {
   const message = event.data;
   // console.log(message);
   if (message.t === "start") {
@@ -72,14 +72,15 @@ addEventListener("message", (event: MessageEvent<MessageToWorker>) => {
 });
 
 function post(message: MessageFromWorker) {
-  postMessage(message);
+  self.postMessage(message);
 }
 
 function run() {
+  // console.log(stack.at(-1), ptr);
   while (true) {
     const stacked = stack.at(-1);
     if (!stacked) {
-      postMessage({ t: "finish" });
+      post({ t: "finish" });
       return;
     }
 
@@ -109,8 +110,8 @@ function run() {
       }
       stacked.index++;
     } else if (command.t === "output") {
-      post({ t: "output", outputs: [tape[ptr]] });
       stacked.index++;
+      post({ t: "output", outputs: [tape[ptr]] });
       return; // 出力を一方的に送り付けるのではなく、メインスレッドからの返事を待機する
     } else if (command.t === "input") {
       if (inputIndex < inputs.length) {
