@@ -1,5 +1,4 @@
 import ace from "ace-builds";
-import "ace-builds/src-noconflict/mode-fsharp";
 import {
   createEffect,
   createMemo,
@@ -18,6 +17,7 @@ import * as BfOptimizer from "./bf/optimizer";
 import * as BfParser from "./bf/parser";
 import * as BfRunner from "./bf/runner";
 import { FileSettings, fileSettingsList } from "./fileSettings";
+import "./highlighter.js";
 
 // Ace Editorの設定をここに書く
 const aceEditorOptions: Partial<ace.Ace.EditorOptions> = {
@@ -25,7 +25,7 @@ const aceEditorOptions: Partial<ace.Ace.EditorOptions> = {
   showPrintMargin: false,
 };
 function configureAceSession(session: ace.Ace.EditSession) {
-  session.setMode("ace/mode/fsharp");
+  session.setMode("ace/mode/bfml");
   session.setTabSize(2);
   session.setUseSoftTabs(true);
 }
