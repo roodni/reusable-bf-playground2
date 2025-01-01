@@ -40,6 +40,7 @@ body {
 
 /* App */
 
+/* 外枠の配置 */
 .app {
   > .header {
     grid-area: h;
@@ -101,10 +102,11 @@ body {
   }
 }
 
+/* 内装 */
 .app {
   > .l {
     display: grid;
-    grid-template-rows: 1fr max-content;
+    grid-template-rows: max-content 1fr max-content;
     /* gap: var(--pad); */
   }
   > .r {

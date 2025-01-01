@@ -93,6 +93,12 @@ export function App() {
     setSelectingFileName(fileSelect.value);
   };
 
+  const selectingFile = () => {
+    const name = selectingFileName();
+    const file = bfmlFiles.find((f) => f.settings.name === name);
+    return file;
+  };
+
   // ファイル選択に変更があったら、エディタの内容を切り替える
   const BfmlMode = ace.require("ace/mode/bfml").Mode;
   createEffect(() => {
@@ -100,12 +106,12 @@ export function App() {
     if (!editor) {
       return;
     }
-    const name = selectingFileName();
-    const file = bfmlFiles.find((f) => f.settings.name === name);
+    const file = selectingFile();
     if (!file) {
       return;
     }
 
+    const name = file.settings.name;
     let session = sessions.get(name);
     if (!session) {
       const s = ace.createEditSession(file.settings.code, new BfmlMode()); // 第二引数は文字列でも渡せそうなんだが型が合わない
@@ -119,6 +125,19 @@ export function App() {
     }
     editor.setSession(session);
   });
+
+  const handleResetClick = () => {
+    const file = selectingFile();
+    if (!file) {
+      return;
+    }
+    const name = file.settings.name;
+    const session = sessions.get(name);
+    if (!session) {
+      return;
+    }
+    session.doc.setValue(file.settings.code);
+  };
 
   // コンパイルに関すること
   const [stderr, setStderr] = createSignal("");
@@ -368,7 +387,6 @@ export function App() {
         onFocusIn={() => setFocuses("left", true)}
         onFocusOut={() => setFocuses("left", false)}
       >
-        <div ref={bfmlEditorElement} class="editor" />
         <div class="inputs-container">
           <select
             ref={fileSelect}
@@ -384,6 +402,16 @@ export function App() {
               )}
             </For>
           </select>
+          <button
+            class="input"
+            disabled={!selectingFile()?.isChanged}
+            onClick={handleResetClick}
+          >
+            Reset
+          </button>
+        </div>
+        <div ref={bfmlEditorElement} class="editor" />
+        <div class="inputs-container">
           <button
             class="input expand"
             onClick={compile}
