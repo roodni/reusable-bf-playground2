@@ -28,6 +28,16 @@ body {
   padding-right: var(--pad);
 }
 
+.inputs-container {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+
+  > .expand {
+    flex: 1;
+  }
+}
+
 /* App */
 
 .app {
@@ -111,37 +121,6 @@ body {
   border-style: solid;
   border-width: 1px;
   border-color: darkgray;
-}
-
-.editor-buttons-container {
-  width: 100%;
-
-  display: flex;
-  flex-wrap: wrap;
-  > * {
-    flex: 1;
-  }
-}
-
-.input-buttons-container {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  > * {
-    flex: 1;
-  }
-}
-
-.interactive-inputs-container {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  > * {
-    flex: auto;
-  }
-  > button {
-    flex: initial;
-  }
 }
 
 .shortcut {

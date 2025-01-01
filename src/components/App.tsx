@@ -369,8 +369,12 @@ export function App() {
         onFocusOut={() => setFocuses("left", false)}
       >
         <div ref={bfmlEditorElement} class="editor" />
-        <div class="editor-buttons-container">
-          <select ref={fileSelect} class="input" onChange={handleFileChange}>
+        <div class="inputs-container">
+          <select
+            ref={fileSelect}
+            class="input expand"
+            onChange={handleFileChange}
+          >
             <For each={bfmlFiles}>
               {(f) => (
                 <option value={f.settings.name}>
@@ -381,7 +385,7 @@ export function App() {
             </For>
           </select>
           <button
-            class="input"
+            class="input expand"
             onClick={compile}
             disabled={compilingState().t === "compiling"}
           >
@@ -389,7 +393,7 @@ export function App() {
             <CtrlEnterText disabled={!focuses.left} />
           </button>
           <button
-            class="input"
+            class="input expand"
             onClick={handleStopCompileClick}
             disabled={compilingState().t !== "compiling"}
           >
@@ -454,12 +458,20 @@ export function App() {
             defaultValue={bfInput()}
             readonly={isBfRunning()}
           />
-          <div class="input-buttons-container">
-            <button class="input" onClick={runBf} disabled={isBfRunning()}>
+          <div class="inputs-container">
+            <button
+              class="input expand"
+              onClick={runBf}
+              disabled={isBfRunning()}
+            >
               {"Run "}
               <CtrlEnterText disabled={!focuses.right} />
             </button>
-            <button class="input" onClick={stopBf} disabled={!isBfRunning()}>
+            <button
+              class="input expand"
+              onClick={stopBf}
+              disabled={!isBfRunning()}
+            >
               Stop
             </button>
           </div>
@@ -467,7 +479,7 @@ export function App() {
 
         <form onSubmit={handleSubmitBfInteractiveInput}>
           <label for="interactive-input">Interactive Input</label>
-          <div class="interactive-inputs-container">
+          <div class="inputs-container">
             <input
               id="interactive-input"
               type="text"
@@ -475,7 +487,7 @@ export function App() {
               spellcheck={false}
               disabled={!isBfInputRequired()}
               autocomplete="off"
-              class="input interactive-input"
+              class="input interactive-input expand"
             />
             <button type="submit" class="input" disabled={!isBfInputRequired()}>
               Enter
