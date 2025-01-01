@@ -1,8 +1,8 @@
-import hello2 from "./assets/examples/hello2.bfml?raw";
-import counter from "./assets/examples/lib/counter.bfml?raw";
-import fixedint from "./assets/examples/lib/fixedint.bfml?raw";
-import future from "./assets/examples/lib/future.bfml?raw";
-import std from "./assets/examples/lib/std.bfml?raw";
+import hello2 from "../assets/examples/hello2.bfml?raw";
+import counter from "../assets/examples/lib/counter.bfml?raw";
+import fixedint from "../assets/examples/lib/fixedint.bfml?raw";
+import future from "../assets/examples/lib/future.bfml?raw";
+import std from "../assets/examples/lib/std.bfml?raw";
 
 export type FileSettings = {
   name: string;

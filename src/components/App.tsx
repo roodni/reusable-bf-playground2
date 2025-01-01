@@ -11,11 +11,11 @@ import {
   Switch,
 } from "solid-js";
 import { createStore } from "solid-js/store";
-import { CodeArea, CodeAreaRef, CodeDisplayArea } from "./Components";
-import CompileWorker from "./assets/playground.bc.js?worker";
-import * as BfOptimizer from "./bf/optimizer";
-import * as BfParser from "./bf/parser";
-import * as BfRunner from "./bf/runner";
+import CompileWorker from "../assets/playground.bc.js?worker";
+import * as BfOptimizer from "../bf/optimizer";
+import * as BfParser from "../bf/parser";
+import * as BfRunner from "../bf/runner";
+import { CodeArea, CodeAreaRef, CodeDisplayArea } from "./CodeArea";
 import { FileSettings, fileSettingsList } from "./fileSettings";
 import "./highlighter.js";
 
@@ -33,7 +33,7 @@ function narrowType<T, U extends T>(o: T, f: (o: T) => o is U): U | false {
   return f(o) ? o : false;
 }
 
-export default function App() {
+export function App() {
   const ctrlEnter = "Ctrl + Enter";
 
   type BfmlFile = {
