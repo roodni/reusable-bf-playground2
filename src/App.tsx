@@ -25,7 +25,6 @@ const aceEditorOptions: Partial<ace.Ace.EditorOptions> = {
   showPrintMargin: false,
 };
 function configureAceSession(session: ace.Ace.EditSession) {
-  session.setMode("ace/mode/bfml");
   session.setTabSize(2);
   session.setUseSoftTabs(true);
 }
@@ -37,19 +36,18 @@ function narrowType<T, U extends T>(o: T, f: (o: T) => o is U): U | false {
 export default function App() {
   const ctrlEnter = "Ctrl + Enter";
 
-  type EditingFile = {
-    session: ace.Ace.EditSession | undefined;
+  type BfmlFile = {
     settings: FileSettings;
+    isChanged: boolean;
   };
-  const editingFiles = new Map<string, EditingFile>(
-    fileSettingsList.map((settings) => [
-      settings.name,
-      {
-        session: undefined,
-        settings,
-      },
-    ]),
+  const [bfmlFiles, setBfmlFiles] = createStore<BfmlFile[]>(
+    fileSettingsList.map((s) => ({
+      settings: s,
+      session: undefined,
+      isChanged: false,
+    })),
   );
+  const sessions = new Map<string, ace.Ace.EditSession>();
 
   let bfmlEditorElement!: HTMLDivElement;
   const [bfmlEditor, setBfmlEditor] = createSignal<ace.Ace.Editor | undefined>(
@@ -62,10 +60,7 @@ export default function App() {
 
   const handleBeforeUnload = (event: Event) => {
     // ファイルが編集されていたら遷移時に確認する
-    const changed = editingFiles
-      .values()
-      .toArray()
-      .some((f) => f.session && f.session.getValue() !== f.settings.code);
+    const changed = bfmlFiles.some((f) => f.isChanged);
     if (changed) {
       event.preventDefault();
     }
@@ -77,7 +72,7 @@ export default function App() {
 
   // ファイル選択に関すること
   const [selectingFileName, setSelectingFileName] = createSignal(
-    (fileSettingsList.find((s) => s.selected) ?? fileSettingsList[0]).name,
+    fileSettingsList[0].name,
   );
 
   let fileSelect!: HTMLSelectElement;
@@ -89,21 +84,30 @@ export default function App() {
   };
 
   // ファイル選択に変更があったら、エディタの内容を切り替える
+  const BfmlMode = ace.require("ace/mode/bfml").Mode;
   createEffect(() => {
-    const name = selectingFileName();
-    const editingFile = editingFiles.get(name);
     const editor = bfmlEditor();
-    if (!editingFile || !editor) {
+    if (!editor) {
       return;
     }
-    if (!editingFile.session) {
-      editingFile.session = ace.createEditSession(
-        editingFile.settings.code,
-        editor.session.getMode(), // 第二引数は本当は省略できそう
-      );
-      configureAceSession(editingFile.session);
+    const name = selectingFileName();
+    const file = bfmlFiles.find((f) => f.settings.name === name);
+    if (!file) {
+      return;
     }
-    editor.setSession(editingFile.session);
+
+    let session = sessions.get(name);
+    if (!session) {
+      const s = ace.createEditSession(file.settings.code, new BfmlMode()); // 第二引数は文字列でも渡せそうなんだが型が合わない
+      configureAceSession(s);
+      s.on("change", () => {
+        const isChanged = s.getValue() !== file.settings.code;
+        setBfmlFiles((f) => f.settings.name === name, { isChanged });
+      });
+      sessions.set(name, s);
+      session = s;
+    }
+    editor.setSession(session);
   });
 
   // コンパイルに関すること
@@ -181,13 +185,10 @@ export default function App() {
 
     const filename = selectingFileName();
     setCompiledFileName(filename);
-    const files = editingFiles
-      .values()
-      .map((f) => ({
-        name: f.settings.name,
-        content: f.session?.getValue() ?? f.settings.code,
-      }))
-      .toArray();
+    const files = bfmlFiles.map((f) => ({
+      name: f.settings.name,
+      content: sessions.get(f.settings.name)?.getValue() ?? f.settings.code,
+    }));
     worker.postMessage({
       files,
       entrypoint: filename,
@@ -360,9 +361,12 @@ export default function App() {
         <div ref={bfmlEditorElement} class="editor" />
         <div class="editor-buttons-container">
           <select ref={fileSelect} class="input" onChange={handleFileChange}>
-            <For each={fileSettingsList}>
-              {(setting) => (
-                <option value={setting.name}>{setting.name}</option>
+            <For each={bfmlFiles}>
+              {(f) => (
+                <option value={f.settings.name}>
+                  {f.settings.name}
+                  <Show when={f.isChanged}>*</Show>
+                </option>
               )}
             </For>
           </select>

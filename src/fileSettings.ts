@@ -7,7 +7,6 @@ import std from "./assets/examples/lib/std.bfml?raw";
 export type FileSettings = {
   name: string;
   code: string;
-  selected?: boolean;
 };
 
 export const fileSettingsList: FileSettings[] = [
@@ -19,7 +18,6 @@ let main = [
   *gen_puts "HELLO\\n"
   
 ]`,
-    selected: true,
   },
   {
     name: "hello2.bfml",
