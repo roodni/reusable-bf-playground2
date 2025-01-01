@@ -1,5 +1,6 @@
 import ace from "ace-builds";
 import {
+  Component,
   createEffect,
   createMemo,
   createSignal,
@@ -33,9 +34,18 @@ function narrowType<T, U extends T>(o: T, f: (o: T) => o is U): U | false {
   return f(o) ? o : false;
 }
 
-export function App() {
-  const ctrlEnter = "Ctrl + Enter";
+const CtrlEnterText: Component<{ disabled: boolean }> = (props) => (
+  <span
+    classList={{
+      shortcut: true,
+      "shortcut-disabled": props.disabled,
+    }}
+  >
+    (Ctrl + Enter)
+  </span>
+);
 
+export function App() {
   type BfmlFile = {
     settings: FileSettings;
     isChanged: boolean;
@@ -376,14 +386,7 @@ export function App() {
             disabled={compilingState().t === "compiling"}
           >
             {"Compile "}
-            <span
-              classList={{
-                shortcut: true,
-                "shortcut-disabled": !focuses.left,
-              }}
-            >
-              ({ctrlEnter})
-            </span>
+            <CtrlEnterText disabled={!focuses.left} />
           </button>
           <button
             class="input"
@@ -454,14 +457,7 @@ export function App() {
           <div class="input-buttons-container">
             <button class="input" onClick={runBf} disabled={isBfRunning()}>
               {"Run "}
-              <span
-                classList={{
-                  shortcut: true,
-                  "shortcut-disabled": !focuses.right,
-                }}
-              >
-                ({ctrlEnter})
-              </span>
+              <CtrlEnterText disabled={!focuses.right} />
             </button>
             <button class="input" onClick={stopBf} disabled={!isBfRunning()}>
               Stop
