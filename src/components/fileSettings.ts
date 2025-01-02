@@ -7,6 +7,7 @@ import std from "../assets/examples/lib/std.bfml?raw";
 export type FileSettings = {
   name: string;
   code: string;
+  input?: string; // 入力例
 };
 
 export const fileSettingsList: FileSettings[] = [
@@ -34,6 +35,7 @@ let main = [
   {
     name: "fixedint.bfml",
     code: fixedint,
+    input: "1200\n",
   },
   {
     name: "future.bfml",

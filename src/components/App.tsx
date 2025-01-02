@@ -6,6 +6,7 @@ import {
   createSignal,
   For,
   Match,
+  on,
   onCleanup,
   onMount,
   Show,
@@ -96,6 +97,9 @@ export function App() {
   const selectingFile = () => {
     const name = selectingFileName();
     const file = bfmlFiles.find((f) => f.settings.name === name);
+    if (!file) {
+      throw new Error(`File not found: ${name}`);
+    }
     return file;
   };
 
@@ -107,9 +111,6 @@ export function App() {
       return;
     }
     const file = selectingFile();
-    if (!file) {
-      return;
-    }
 
     const name = file.settings.name;
     let session = sessions.get(name);
@@ -128,9 +129,6 @@ export function App() {
 
   const handleResetClick = () => {
     const file = selectingFile();
-    if (!file) {
-      return;
-    }
     const name = file.settings.name;
     const session = sessions.get(name);
     if (!session) {
@@ -264,6 +262,21 @@ export function App() {
     }
     return cnt;
   });
+
+  const bfInputFromFileName = new Map<string, string>();
+  createEffect(() => {
+    // ファイルに応じて入力を変える
+    const file = selectingFile();
+    const input =
+      bfInputFromFileName.get(file.settings.name) ?? file.settings.input ?? "";
+    bfInputAreaRef.update(input);
+  });
+  createEffect(
+    on(bfInput, (input) => {
+      // 入力をファイルごとに保存しておく
+      bfInputFromFileName.set(selectingFileName(), input);
+    }),
+  );
 
   let bfInteractiveInputRef!: HTMLInputElement;
 
@@ -404,7 +417,7 @@ export function App() {
           </select>
           <button
             class="input"
-            disabled={!selectingFile()?.isChanged}
+            disabled={!selectingFile().isChanged}
             onClick={handleResetClick}
           >
             Reset
