@@ -6,7 +6,7 @@ import {
   Ref,
 } from "solid-js";
 
-const defaultRows = 8;
+const defaultRows = 6;
 
 // uncontrolled な編集可能テキストエリア
 export type CodeAreaRef = {

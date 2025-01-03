@@ -18,14 +18,8 @@ body {
   font-size: 1rem;
 }
 
-.pad-y {
-  padding-top: var(--pad);
-  padding-bottom: var(--pad);
-}
-
-.pad-x {
-  padding-left: var(--pad);
-  padding-right: var(--pad);
+.pad {
+  padding: var(--pad);
 }
 
 .inputs-container {
@@ -44,17 +38,12 @@ body {
 .app {
   > .header {
     grid-area: h;
-    > .t {
-      font-size: 1.4rem;
-    }
   }
   > .l {
     grid-area: l;
   }
   > .r {
     grid-area: r;
-
-    /* background-color: burlywood; */
   }
 }
 
@@ -94,11 +83,9 @@ body {
       "r";
     grid-template-rows: max-content max-content;
 
-    > .l {
+    .editor {
       height: 50svh;
     }
-    /* > .r {
-    } */
   }
 }
 
@@ -106,20 +93,32 @@ body {
 .app {
   > .l {
     display: grid;
-    grid-template-rows: max-content 1fr max-content;
-    /* gap: var(--pad); */
+    grid-template-rows: max-content 1fr;
+    gap: var(--pad);
   }
   > .r {
     display: flex;
     flex-direction: column;
-    gap: var(--pad);
+    gap: 24px;
   }
 }
 
+.heading1 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+.heading2 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+.section2 {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pad);
+}
+
 .editor {
-  position: relative;
   width: 100%;
-  height: 100%;
   border-style: solid;
   border-width: 1px;
   border-color: darkgray;
