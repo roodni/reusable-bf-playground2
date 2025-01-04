@@ -154,6 +154,8 @@ export function App() {
     return cnt;
   });
 
+  let bfRunButton!: HTMLButtonElement;
+
   type CompilingState =
     | { t: "ready" }
     | { t: "compiling"; cleanup: () => void }
@@ -168,6 +170,9 @@ export function App() {
     const prev = compilingState();
     if (prev.t === "compiling") {
       prev.cleanup();
+    }
+    if (next.t === "succeed") {
+      bfRunButton.focus();
     }
     _setCompilingState(next);
   };
@@ -294,6 +299,7 @@ export function App() {
     // console.log("%f seconds", (Date.now() - bfStartTime) / 1000);
     setIsBfInputRequired(false);
     _setBfRunner(undefined);
+    bfRunButton.focus();
   };
 
   const handleBfRunnerEvent = (ev: BfRunner.RunnerEvent) => {
@@ -523,6 +529,7 @@ export function App() {
           </div>
           <div class="inputs-container">
             <button
+              ref={bfRunButton}
               class="input expand"
               onClick={runBf}
               disabled={isBfRunning()}
