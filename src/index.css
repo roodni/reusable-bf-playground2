@@ -1,6 +1,8 @@
 /* 小規模だからCSSは一枚でいいかと思った */
 :root {
-  --pad: 4px;
+  --form-gap: 4px;
+  --para-gap: 12px;
+  --sec-gap: 24px;
 }
 
 body {
@@ -9,27 +11,6 @@ body {
 
 * {
   box-sizing: border-box;
-}
-
-/* 汎用 */
-
-.input {
-  min-height: 2.5rem;
-  font-size: 1rem;
-}
-
-.pad {
-  padding: var(--pad);
-}
-
-.inputs-container {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-
-  > .expand {
-    flex: 1;
-  }
 }
 
 /* App */
@@ -82,7 +63,6 @@ body {
       "l"
       "r";
     grid-template-rows: max-content max-content;
-
     .editor {
       height: 50svh;
     }
@@ -94,12 +74,26 @@ body {
   > .l {
     display: grid;
     grid-template-rows: max-content 1fr;
-    gap: var(--pad);
+    gap: var(--form-gap);
   }
-  > .r {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+}
+
+.pad {
+  padding: var(--form-gap);
+}
+
+.input {
+  min-height: 2.5rem;
+  font-size: 1rem;
+}
+
+.inputs-container {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+
+  > .expand {
+    flex: 1;
   }
 }
 
@@ -111,10 +105,23 @@ body {
   font-size: 1.2rem;
   margin: 0;
 }
-.section2 {
+
+.sections-column {
   display: flex;
   flex-direction: column;
-  gap: var(--pad);
+  gap: var(--sec-gap);
+}
+
+.paragraphs-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--para-gap);
+}
+
+.forms-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-gap);
 }
 
 .editor {
@@ -130,6 +137,22 @@ body {
 }
 .shortcut-disabled {
   opacity: 40%;
+}
+
+.settings-summary {
+  user-select: none;
+  &:hover {
+    color: gray;
+  }
+}
+
+.settings-table {
+  border-spacing: var(--form-gap);
+  padding-left: 24px;
+}
+
+.settings-checkbox {
+  margin: 0;
 }
 
 /* CodeArea */

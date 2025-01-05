@@ -454,48 +454,98 @@ export function App() {
       </div>
 
       {/* 右 */}
-      <div class="r pad">
+      <div class="r pad sections-column">
         <div
-          class="section2"
+          class="paragraphs-column"
           onFocusIn={() => setFocuses("codegen", true)}
           onFocusOut={() => setFocuses("codegen", false)}
         >
           <h2 class="heading2">Code Generation</h2>
-          <div>
-            <Switch>
-              <Match when={compilingState().t === "ready"}>Ready</Match>
-              <Match when={compilingState().t === "compiling"}>
-                Compiling ... ({compiledFileName()}, {compilingSec().toFixed(0)}
-                s)
-              </Match>
-              <Match when={compilingState().t === "succeed"}>
-                Compiled ({compiledFileName()}, {compilingSec().toFixed(1)}s)
-              </Match>
-              <Match when={compilingState().t === "failed"}>
-                Compilation failed ({compiledFileName()},{" "}
-                {compilingSec().toFixed(1)}s)
-              </Match>
-              <Match when={compilingState().t === "aborted"}>
-                Compilation aborted ({compiledFileName()},{" "}
-                {compilingSec().toFixed(1)}s)
-              </Match>
-              <Match
-                when={narrowType(compilingState(), (s) => s.t === "fatal")}
-              >
-                {(s) => <>Fatal error: {s().message}</>}
-              </Match>
-            </Switch>
-          </div>
-          <div style={{ display: stderr() === "" ? "none" : "block" }}>
-            <CodeDisplayArea
-              code={stderr()}
-              variant={compilingState().t === "succeed" ? "normal" : "error"}
-            />
+          <details>
+            <summary class="settings-summary">
+              Compilation Settings (未実装)
+            </summary>
+            <table class="settings-table">
+              <tbody>
+                <tr>
+                  <td>
+                    <label for="settings-show-layout">Show layouts</label>
+                  </td>
+                  <td>
+                    <input
+                      id="settings-show-layout"
+                      type="checkbox"
+                      class="settings-checkbox"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="settings-optimize">Optimization level</label>
+                  </td>
+                  <td>
+                    <select id="settings-optimize">
+                      <option value="0">0 (No optimization)</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3" selected>
+                        3 (Max)
+                      </option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label for="settings-timeout">Timeout</label>
+                  </td>
+                  <td>
+                    <select id="settings-timeout">
+                      <option>5 s</option>
+                      <option>Never</option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </details>
+          <div class="forms-column">
+            <div>
+              <Switch>
+                <Match when={compilingState().t === "ready"}>Ready</Match>
+                <Match when={compilingState().t === "compiling"}>
+                  Compiling ... ({compiledFileName()},{" "}
+                  {compilingSec().toFixed(0)}
+                  s)
+                </Match>
+                <Match when={compilingState().t === "succeed"}>
+                  Compiled ({compiledFileName()}, {compilingSec().toFixed(1)}s)
+                </Match>
+                <Match when={compilingState().t === "failed"}>
+                  Compilation failed ({compiledFileName()},{" "}
+                  {compilingSec().toFixed(1)}s)
+                </Match>
+                <Match when={compilingState().t === "aborted"}>
+                  Compilation aborted ({compiledFileName()},{" "}
+                  {compilingSec().toFixed(1)}s)
+                </Match>
+                <Match
+                  when={narrowType(compilingState(), (s) => s.t === "fatal")}
+                >
+                  {(s) => <>Fatal error: {s().message}</>}
+                </Match>
+              </Switch>
+            </div>
+            <div style={{ display: stderr() === "" ? "none" : "block" }}>
+              <CodeDisplayArea
+                code={stderr()}
+                variant={compilingState().t === "succeed" ? "normal" : "error"}
+              />
+            </div>
           </div>
         </div>
 
         <div
-          class="section2"
+          class="paragraphs-column"
           onFocusIn={() => setFocuses("exe", true)}
           onFocusOut={() => setFocuses("exe", false)}
         >
@@ -517,33 +567,35 @@ export function App() {
               <CodeDisplayArea code={bfError()} variant={"error"} />
             </div>
           </Show>
-          <div>
-            <label for="bf-input">Input</label> ({bfInputLines()} lines)
-            <CodeArea
-              id="bf-input"
-              ref={bfInputAreaRef}
-              onUpdate={_setBfInput}
-              defaultValue={bfInput()}
-              readonly={isBfRunning()}
-            />
-          </div>
-          <div class="inputs-container">
-            <button
-              ref={bfRunButton}
-              class="input expand"
-              onClick={runBf}
-              disabled={isBfRunning()}
-            >
-              {"Run "}
-              <CtrlEnterText disabled={!focuses.exe} />
-            </button>
-            <button
-              class="input expand"
-              onClick={stopBf}
-              disabled={!isBfRunning()}
-            >
-              Stop
-            </button>
+          <div class="forms-column">
+            <div>
+              <label for="bf-input">Input</label> ({bfInputLines()} lines)
+              <CodeArea
+                id="bf-input"
+                ref={bfInputAreaRef}
+                onUpdate={_setBfInput}
+                defaultValue={bfInput()}
+                readonly={isBfRunning()}
+              />
+            </div>
+            <div class="inputs-container">
+              <button
+                ref={bfRunButton}
+                class="input expand"
+                onClick={runBf}
+                disabled={isBfRunning()}
+              >
+                {"Run "}
+                <CtrlEnterText disabled={!focuses.exe} />
+              </button>
+              <button
+                class="input expand"
+                onClick={stopBf}
+                disabled={!isBfRunning()}
+              >
+                Stop
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmitBfInteractiveInput}>
