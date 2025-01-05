@@ -31,10 +31,6 @@ function configureAceSession(session: ace.Ace.EditSession) {
   session.setUseSoftTabs(true);
 }
 
-function narrowType<T, U extends T>(o: T, f: (o: T) => o is U): U | false {
-  return f(o) ? o : false;
-}
-
 const CtrlEnterText: Component<{ disabled: boolean }> = (props) => (
   <span
     classList={{
@@ -138,8 +134,6 @@ export function App() {
   };
 
   // コンパイルに関すること
-  const [stderr, setStderr] = createSignal("");
-
   let bfAreaRef!: CodeAreaRef;
   const [bfCode, _setBfCode] = createSignal("");
   const bfCodeSize = createMemo(() => {
@@ -156,102 +150,113 @@ export function App() {
 
   let bfRunButton!: HTMLButtonElement;
 
-  type CompilingState =
-    | { t: "ready" }
-    | { t: "compiling"; cleanup: () => void }
-    | { t: "succeed" }
-    | { t: "failed" }
-    | { t: "aborted" }
-    | { t: "fatal"; message: string };
-  const [compilingState, _setCompilingState] = createSignal<CompilingState>({
-    t: "ready",
-  });
-  const updateCompilingState = (next: CompilingState) => {
-    const prev = compilingState();
-    if (prev.t === "compiling") {
-      prev.cleanup();
-    }
-    if (next.t === "succeed") {
-      bfRunButton.focus();
-    }
-    _setCompilingState(next);
-  };
+  type CompilationStatus =
+    | "ready"
+    | "compiling"
+    | "succeed"
+    | "failed"
+    | "aborted"
+    | "fatal";
+  const [compilation, setCompilation] = createStore({
+    status: "ready" satisfies CompilationStatus as CompilationStatus,
 
-  const [compilingTime, setCompilingTime] = createSignal(0);
-  const compilingSec = () => compilingTime() / 1000;
-  const [compiledFileName, setCompiledFileName] = createSignal("");
+    // ダミーの値を与えるのは不本意だが、discriminated unionにしたところで楽にはならなそう
+    err: "", // エラーメッセージやレイアウト表示に使う
+    elapsedTime: 0,
+    filename: "",
+  });
+  const compilingSec = () => compilation.elapsedTime / 1000;
+
+  let stopCompile = () => {};
+  const handleStopCompileButtonClick = () => {
+    stopCompile();
+  };
 
   let showLayoutCheckbox!: HTMLInputElement;
   let optimizationLevelSelect!: HTMLSelectElement;
 
-  const compile = () => {
-    if (compilingState().t === "compiling") {
+  const compile = async () => {
+    if (compilation.status === "compiling") {
       return;
     }
-    const worker = new CompileWorker();
-
-    setCompilingTime(0);
-    const startTime = Date.now();
-    const updateTime = () => {
-      setCompilingTime(Date.now() - startTime);
-    };
-    const elapsedTimeTimer = setInterval(updateTime, 1000);
-    const timeoutTimer = setTimeout(() => {
-      updateCompilingState({ t: "aborted" });
-    }, 30000);
-
-    const cleanup = () => {
-      worker.terminate();
-      clearInterval(elapsedTimeTimer);
-      updateTime();
-      clearTimeout(timeoutTimer);
-    };
-    updateCompilingState({ t: "compiling", cleanup });
-
-    worker.addEventListener("message", (res) => {
-      setStderr(res.data.err);
-      bfAreaRef.update(res.data.out);
-      updateCompilingState({ t: res.data.success ? "succeed" : "failed" });
-    });
-    worker.addEventListener("error", (e) => {
-      console.error(e);
-      updateCompilingState({ t: "fatal", message: e.message });
-    });
 
     const filename = selectingFileName();
-    setCompiledFileName(filename);
+    setCompilation({
+      status: "compiling",
+      err: "",
+      elapsedTime: 0,
+      filename,
+    });
+    bfAreaRef.update("");
+
+    const startTime = Date.now();
+    const updateTime = () => {
+      setCompilation("elapsedTime", Date.now() - startTime);
+    };
+    const elapsedTimeTimer = setInterval(updateTime, 1000);
+    let timeoutTimer: number;
 
     const files = bfmlFiles.map((f) => ({
       name: f.settings.name,
       content: sessions.get(f.settings.name)?.getValue() ?? f.settings.code,
     }));
 
-    worker.postMessage({
-      files,
-      entrypoint: filename,
-      showLayout: showLayoutCheckbox.checked,
-      optimize: parseInt(optimizationLevelSelect.value),
-      maxLength: 1000000,
+    const worker = new CompileWorker();
+    const result = await new Promise<
+      | { t: "message"; data: { out: string; err: string; success: boolean } }
+      | { t: "error"; e: ErrorEvent }
+      | { t: "abort" }
+    >((resolve) => {
+      worker.addEventListener("message", (res) => {
+        resolve({ t: "message", data: res.data });
+      });
+      worker.addEventListener("error", (e) => {
+        resolve({ t: "error", e });
+      });
+      timeoutTimer = window.setTimeout(() => resolve({ t: "abort" }), 5000);
+      stopCompile = () => resolve({ t: "abort" });
+
+      worker.postMessage({
+        files,
+        entrypoint: filename,
+        showLayout: showLayoutCheckbox.checked,
+        optimize: parseInt(optimizationLevelSelect.value),
+        maxLength: 1000000,
+      });
     });
 
-    bfAreaRef.update("");
-    setStderr("");
-  };
+    worker.terminate();
+    updateTime();
+    window.clearInterval(elapsedTimeTimer);
+    window.clearTimeout(timeoutTimer!);
 
-  const handleStopCompileClick = () => {
-    if (compilingState().t === "compiling") {
-      updateCompilingState({ t: "aborted" });
+    if (result.t === "message") {
+      bfAreaRef.update(result.data.out);
+      setCompilation({
+        status: result.data.success ? "succeed" : "failed",
+        err: result.data.err,
+      });
+      if (result.data.success) {
+        bfRunButton.focus();
+      }
+    } else if (result.t === "error") {
+      console.error(result.e);
+      setCompilation({
+        status: "fatal",
+        err: result.e.message,
+      });
+    } else if (result.t === "abort") {
+      setCompilation({ status: "aborted" });
     }
   };
 
   const handleBfAreaInput = () => {
-    switch (compilingState().t) {
+    switch (compilation.status) {
       case "succeed":
       case "failed":
       case "aborted":
       case "fatal":
-        setStderr("");
-        updateCompilingState({ t: "ready" });
+        setCompilation({ status: "ready", err: "" });
         break;
     }
   };
@@ -443,15 +448,15 @@ export function App() {
           <button
             class="input expand"
             onClick={compile}
-            disabled={compilingState().t === "compiling"}
+            disabled={compilation.status === "compiling"}
           >
             {"Compile "}
             <CtrlEnterText disabled={!focuses.left && !focuses.codegen} />
           </button>
           <button
             class="input expand"
-            onClick={handleStopCompileClick}
-            disabled={compilingState().t !== "compiling"}
+            onClick={handleStopCompileButtonClick}
+            disabled={compilation.status !== "compiling"}
           >
             Stop
           </button>
@@ -518,36 +523,33 @@ export function App() {
           <div class="forms-column">
             <div>
               <Switch>
-                <Match when={compilingState().t === "ready"}>Ready</Match>
-                <Match when={compilingState().t === "compiling"}>
-                  Compiling ... ({compiledFileName()},{" "}
+                <Match when={compilation.status === "ready"}>Ready</Match>
+                <Match when={compilation.status === "compiling"}>
+                  Compiling ... ({compilation.filename},{" "}
                   {compilingSec().toFixed(0)}
                   s)
                 </Match>
-                <Match when={compilingState().t === "succeed"}>
-                  Compiled ({compiledFileName()}, {compilingSec().toFixed(1)}s)
+                <Match when={compilation.status === "succeed"}>
+                  Compiled ({compilation.filename}, {compilingSec().toFixed(1)}
+                  s)
                 </Match>
-                <Match when={compilingState().t === "failed"}>
-                  Compilation failed ({compiledFileName()},{" "}
+                <Match when={compilation.status === "failed"}>
+                  Compilation failed ({compilation.filename},{" "}
                   {compilingSec().toFixed(1)}s)
                 </Match>
-                <Match when={compilingState().t === "aborted"}>
-                  Compilation aborted ({compiledFileName()},{" "}
+                <Match when={compilation.status === "aborted"}>
+                  Compilation aborted ({compilation.filename},{" "}
                   {compilingSec().toFixed(1)}s)
                 </Match>
-                <Match
-                  when={narrowType(compilingState(), (s) => s.t === "fatal")}
-                >
-                  {(s) => <>Fatal error: {s().message}</>}
-                </Match>
+                <Match when={compilation.status === "fatal"}>Fatal error</Match>
               </Switch>
             </div>
-            <div style={{ display: stderr() === "" ? "none" : "block" }}>
+            <Show when={compilation.err !== ""}>
               <CodeDisplayArea
-                code={stderr()}
-                variant={compilingState().t === "succeed" ? "normal" : "error"}
+                code={compilation.err}
+                variant={compilation.status === "succeed" ? "normal" : "error"}
               />
-            </div>
+            </Show>
           </div>
         </div>
 
@@ -566,7 +568,7 @@ export function App() {
               onUpdate={_setBfCode}
               onInput={handleBfAreaInput}
               defaultValue={bfCode()}
-              disabled={compilingState().t === "compiling"}
+              disabled={compilation.status === "compiling"}
             />
           </div>
           <Show when={bfError() !== ""}>

@@ -41,4 +41,11 @@ let main = [
     name: "future.bfml",
     code: future,
   },
+  {
+    name: "fatal",
+    code: `let rec f () = 0 + f ();;
+let main = [
+  ;f ()
+]`,
+  },
 ];
