@@ -181,6 +181,9 @@ export function App() {
   const compilingSec = () => compilingTime() / 1000;
   const [compiledFileName, setCompiledFileName] = createSignal("");
 
+  let showLayoutCheckbox!: HTMLInputElement;
+  let optimizationLevelSelect!: HTMLSelectElement;
+
   const compile = () => {
     if (compilingState().t === "compiling") {
       return;
@@ -217,15 +220,17 @@ export function App() {
 
     const filename = selectingFileName();
     setCompiledFileName(filename);
+
     const files = bfmlFiles.map((f) => ({
       name: f.settings.name,
       content: sessions.get(f.settings.name)?.getValue() ?? f.settings.code,
     }));
+
     worker.postMessage({
       files,
       entrypoint: filename,
-      optimize: 3,
-      showLayout: false,
+      showLayout: showLayoutCheckbox.checked,
+      optimize: parseInt(optimizationLevelSelect.value),
       maxLength: 1000000,
     });
 
@@ -462,9 +467,7 @@ export function App() {
         >
           <h2 class="heading2">Code Generation</h2>
           <details>
-            <summary class="settings-summary">
-              Compilation Settings (未実装)
-            </summary>
+            <summary class="settings-summary">Compilation Settings</summary>
             <table class="settings-table">
               <tbody>
                 <tr>
@@ -473,6 +476,7 @@ export function App() {
                   </td>
                   <td>
                     <input
+                      ref={showLayoutCheckbox}
                       id="settings-show-layout"
                       type="checkbox"
                       class="settings-checkbox"
@@ -484,7 +488,10 @@ export function App() {
                     <label for="settings-optimize">Optimization level</label>
                   </td>
                   <td>
-                    <select id="settings-optimize">
+                    <select
+                      ref={optimizationLevelSelect}
+                      id="settings-optimize"
+                    >
                       <option value="0">0 (No optimization)</option>
                       <option value="1">1</option>
                       <option value="2">2</option>
@@ -494,7 +501,7 @@ export function App() {
                     </select>
                   </td>
                 </tr>
-                <tr>
+                {/* <tr>
                   <td>
                     <label for="settings-timeout">Timeout</label>
                   </td>
@@ -504,7 +511,7 @@ export function App() {
                       <option>Never</option>
                     </select>
                   </td>
-                </tr>
+                </tr> */}
               </tbody>
             </table>
           </details>
