@@ -629,7 +629,10 @@ export function App() {
 
           <div>
             Output
-            <CodeDisplayArea code={bfOutput()} showEof={!isBfRunning()} />
+            <CodeDisplayArea
+              code={bfOutput()}
+              cursor={isBfRunning() ? "zerowidth" : "eof"}
+            />
           </div>
         </div>
       </div>

@@ -194,12 +194,12 @@ body {
   max-height: 70svh;
 }
 
-.code-display-area-empty::before {
-  content: " ";
-}
-.code-display-area-show-eof::after {
+.code-display-area-cursor-eof::after {
   content: "[EOF]";
   opacity: 50%;
+}
+.code-display-area-cursor-zerowidth::after {
+  content: "​";
 }
 
 .code-display-area-variant-normal {

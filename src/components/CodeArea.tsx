@@ -64,17 +64,16 @@ export const CodeArea: Component<{
 export const CodeDisplayArea: Component<{
   code: string;
   variant?: "normal" | "error";
-  showEof?: boolean;
+  cursor?: "none" | "eof" | "zerowidth";
 }> = (_props) => {
-  const props = mergeProps({ variant: "normal" }, _props);
+  const props = mergeProps({ variant: "normal", cursor: "none" }, _props);
   return (
     <pre
       classList={{
         "code-area": true,
         "code-display-area": true,
         [`code-display-area-variant-${props.variant}`]: true,
-        "code-display-area-show-eof": props.showEof,
-        "code-display-area-empty": !props.showEof && props.code === "",
+        [`code-display-area-cursor-${props.cursor}`]: true,
       }}
     >
       {props.code}
