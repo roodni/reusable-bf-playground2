@@ -174,6 +174,7 @@ export function App() {
 
   let showLayoutCheckbox!: HTMLInputElement;
   let optimizationLevelSelect!: HTMLSelectElement;
+  let timeoutSelect!: HTMLSelectElement;
 
   const compile = async () => {
     if (compilation.status === "compiling") {
@@ -202,7 +203,7 @@ export function App() {
       content: sessions.get(f.settings.name)?.getValue() ?? f.settings.code,
     }));
 
-    let timeoutTimer: number;
+    let timeoutTimer: number | undefined;
     const callback = await new Promise<() => void>((resolve) => {
       worker.addEventListener("message", (res) => {
         resolve(() => {
@@ -223,9 +224,13 @@ export function App() {
           setCompilation({ status: "fatal", err });
         });
       });
+
       const abort = () => resolve(() => setCompilation({ status: "aborted" }));
-      timeoutTimer = window.setTimeout(abort, 5000);
       stopCompile = abort;
+      const timeout = parseInt(timeoutSelect.value);
+      if (timeout > 0) {
+        timeoutTimer = window.setTimeout(abort, timeout * 1000);
+      }
 
       worker.postMessage({
         files,
@@ -239,7 +244,7 @@ export function App() {
     worker.terminate();
     updateTime();
     window.clearInterval(elapsedTimeTimer);
-    window.clearTimeout(timeoutTimer!);
+    window.clearTimeout(timeoutTimer);
 
     callback();
   };
@@ -500,17 +505,17 @@ export function App() {
                     </select>
                   </td>
                 </tr>
-                {/* <tr>
+                <tr>
                   <td>
                     <label for="settings-timeout">Timeout</label>
                   </td>
                   <td>
-                    <select id="settings-timeout">
-                      <option>5 s</option>
-                      <option>Never</option>
+                    <select ref={timeoutSelect} id="settings-timeout">
+                      <option value="5">5 s</option>
+                      <option value="0">Never</option>
                     </select>
                   </td>
-                </tr> */}
+                </tr>
               </tbody>
             </table>
           </details>
