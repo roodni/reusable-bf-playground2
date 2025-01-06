@@ -194,27 +194,37 @@ export function App() {
       setCompilation("elapsedTime", Date.now() - startTime);
     };
     const elapsedTimeTimer = setInterval(updateTime, 1000);
-    let timeoutTimer: number;
+
+    const worker = new CompileWorker();
 
     const files = bfmlFiles.map((f) => ({
       name: f.settings.name,
       content: sessions.get(f.settings.name)?.getValue() ?? f.settings.code,
     }));
 
-    const worker = new CompileWorker();
-    const result = await new Promise<
-      | { t: "message"; data: { out: string; err: string; success: boolean } }
-      | { t: "error"; e: ErrorEvent }
-      | { t: "abort" }
-    >((resolve) => {
+    let timeoutTimer: number;
+    const callback = await new Promise<() => void>((resolve) => {
       worker.addEventListener("message", (res) => {
-        resolve({ t: "message", data: res.data });
+        resolve(() => {
+          bfAreaRef.update(res.data.out);
+          setCompilation({
+            status: res.data.success ? "succeed" : "failed",
+            err: res.data.err,
+          });
+          if (res.data.success) {
+            bfRunButton.focus();
+          }
+        });
       });
       worker.addEventListener("error", (e) => {
-        resolve({ t: "error", e });
+        resolve(() => {
+          console.error(e);
+          setCompilation({ status: "fatal", err: e.message });
+        });
       });
-      timeoutTimer = window.setTimeout(() => resolve({ t: "abort" }), 5000);
-      stopCompile = () => resolve({ t: "abort" });
+      const abort = () => resolve(() => setCompilation({ status: "aborted" }));
+      timeoutTimer = window.setTimeout(abort, 5000);
+      stopCompile = abort;
 
       worker.postMessage({
         files,
@@ -230,24 +240,7 @@ export function App() {
     window.clearInterval(elapsedTimeTimer);
     window.clearTimeout(timeoutTimer!);
 
-    if (result.t === "message") {
-      bfAreaRef.update(result.data.out);
-      setCompilation({
-        status: result.data.success ? "succeed" : "failed",
-        err: result.data.err,
-      });
-      if (result.data.success) {
-        bfRunButton.focus();
-      }
-    } else if (result.t === "error") {
-      console.error(result.e);
-      setCompilation({
-        status: "fatal",
-        err: result.e.message,
-      });
-    } else if (result.t === "abort") {
-      setCompilation({ status: "aborted" });
-    }
+    callback();
   };
 
   const handleBfAreaInput = () => {
