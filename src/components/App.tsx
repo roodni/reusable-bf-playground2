@@ -219,7 +219,8 @@ export function App() {
       worker.addEventListener("error", (e) => {
         resolve(() => {
           console.error(e);
-          setCompilation({ status: "fatal", err: e.message });
+          const err = e.message ?? ""; // 通信エラーのとき ErrorEvent ではなく Event になって message が存在しない
+          setCompilation({ status: "fatal", err });
         });
       });
       const abort = () => resolve(() => setCompilation({ status: "aborted" }));
