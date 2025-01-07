@@ -519,25 +519,28 @@ export function App() {
           <div class="forms-column">
             <div>
               <Switch>
-                <Match when={compilation.status === "ready"}>Ready</Match>
+                <Match when={compilation.status === "ready"}>🟦Ready</Match>
                 <Match when={compilation.status === "compiling"}>
-                  Compiling ... ({compilation.filename},{" "}
+                  ⌛Compiling ... ({compilation.filename},{" "}
                   {compilingSec().toFixed(0)}
                   s)
                 </Match>
                 <Match when={compilation.status === "succeed"}>
-                  Compiled ({compilation.filename}, {compilingSec().toFixed(1)}
+                  ✅Compiled ({compilation.filename},{" "}
+                  {compilingSec().toFixed(1)}
                   s)
                 </Match>
                 <Match when={compilation.status === "failed"}>
-                  Compilation failed ({compilation.filename},{" "}
+                  ❌Compilation failed ({compilation.filename},{" "}
                   {compilingSec().toFixed(1)}s)
                 </Match>
                 <Match when={compilation.status === "aborted"}>
-                  Compilation aborted ({compilation.filename},{" "}
+                  ❌Compilation aborted ({compilation.filename},{" "}
                   {compilingSec().toFixed(1)}s)
                 </Match>
-                <Match when={compilation.status === "fatal"}>Fatal error</Match>
+                <Match when={compilation.status === "fatal"}>
+                  ❌Fatal error
+                </Match>
               </Switch>
             </div>
             <Show when={compilation.err !== ""}>
