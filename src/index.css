@@ -20,10 +20,10 @@ body {
   > .header {
     grid-area: h;
   }
-  > .l {
+  > .left {
     grid-area: l;
   }
-  > .r {
+  > .right {
     grid-area: r;
   }
 }
@@ -41,11 +41,11 @@ body {
     grid-template-rows: max-content 1fr;
     grid-template-columns: 1fr 1fr;
 
-    > .l {
+    > .left {
       height: 100%;
       overflow-y: hidden;
     }
-    > .r {
+    > .right {
       height: 100%;
       overflow-y: auto;
     }
@@ -71,7 +71,12 @@ body {
 
 /* 内装 */
 .app {
-  > .l {
+  > .header {
+    border-bottom-width: 1px;
+    border-bottom-style: dotted;
+    border-bottom-color: gray;
+  }
+  > .left {
     display: grid;
     grid-template-rows: max-content 1fr;
     gap: var(--form-gap);
@@ -98,7 +103,7 @@ body {
 }
 
 .heading1 {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   margin: 0;
 }
 .heading2 {

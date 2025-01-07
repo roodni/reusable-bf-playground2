@@ -412,7 +412,7 @@ export function App() {
 
       {/* 左 */}
       <div
-        class="l pad"
+        class="left pad"
         onFocusIn={() => setFocuses("left", true)}
         onFocusOut={() => setFocuses("left", false)}
       >
@@ -460,7 +460,7 @@ export function App() {
       </div>
 
       {/* 右 */}
-      <div class="r pad sections-column">
+      <div class="right pad sections-column">
         <div
           class="paragraphs-column"
           onFocusIn={() => setFocuses("codegen", true)}
