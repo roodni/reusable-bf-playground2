@@ -212,9 +212,6 @@ export function App() {
             status: res.data.success ? "succeed" : "failed",
             err: res.data.err,
           });
-          if (res.data.success) {
-            bfRunButton.focus();
-          }
         });
       });
       worker.addEventListener("error", (e) => {
