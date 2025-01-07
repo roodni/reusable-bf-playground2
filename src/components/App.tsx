@@ -531,12 +531,12 @@ export function App() {
                   s)
                 </Match>
                 <Match when={compilation.status === "failed"}>
-                  ❌Compilation failed ({compilation.filename},{" "}
-                  {compilingSec().toFixed(1)}s)
+                  ❌Failed ({compilation.filename}, {compilingSec().toFixed(1)}
+                  s)
                 </Match>
                 <Match when={compilation.status === "aborted"}>
-                  ❌Compilation aborted ({compilation.filename},{" "}
-                  {compilingSec().toFixed(1)}s)
+                  ❌Aborted ({compilation.filename}, {compilingSec().toFixed(1)}
+                  s)
                 </Match>
                 <Match when={compilation.status === "fatal"}>
                   ❌Fatal error
