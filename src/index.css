@@ -1,8 +1,8 @@
 /* 小規模だからCSSは一枚でいいかと思った */
 :root {
   --form-gap: 4px;
-  --para-gap: 12px;
-  --sec-gap: 24px;
+  --para-gap: 8px;
+  --sec-gap: 40px;
 }
 
 body {

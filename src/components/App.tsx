@@ -384,6 +384,7 @@ export function App() {
   };
 
   // キーボードショートカット
+  // TODO: 直す
   const [focuses, setFocuses] = createStore({
     left: false,
     codegen: false,
@@ -466,7 +467,6 @@ export function App() {
           onFocusIn={() => setFocuses("codegen", true)}
           onFocusOut={() => setFocuses("codegen", false)}
         >
-          <h2 class="heading2">Code Generation</h2>
           <details>
             <summary class="settings-summary">Compilation Settings</summary>
             <table class="settings-table">
@@ -516,30 +516,41 @@ export function App() {
               </tbody>
             </table>
           </details>
+        </div>
+
+        <div
+          class="paragraphs-column"
+          onFocusIn={() => setFocuses("exe", true)}
+          onFocusOut={() => setFocuses("exe", false)}
+        >
           <div class="forms-column">
             <div>
               <Switch>
-                <Match when={compilation.status === "ready"}>🟦Ready</Match>
+                <Match when={compilation.status === "ready"}>
+                  🟦 Ready to compile
+                </Match>
                 <Match when={compilation.status === "compiling"}>
-                  ⌛Compiling ... ({compilation.filename},{" "}
+                  ⌛ Compiling ... ({compilation.filename},{" "}
                   {compilingSec().toFixed(0)}
                   s)
                 </Match>
                 <Match when={compilation.status === "succeed"}>
-                  ✅Compiled ({compilation.filename},{" "}
+                  ✅ Compiled ({compilation.filename},{" "}
                   {compilingSec().toFixed(1)}
                   s)
                 </Match>
                 <Match when={compilation.status === "failed"}>
-                  ❌Failed ({compilation.filename}, {compilingSec().toFixed(1)}
+                  ❌ Compilation failed ({compilation.filename},{" "}
+                  {compilingSec().toFixed(1)}
                   s)
                 </Match>
                 <Match when={compilation.status === "aborted"}>
-                  ❌Aborted ({compilation.filename}, {compilingSec().toFixed(1)}
+                  ❌ Compilation aborted ({compilation.filename},{" "}
+                  {compilingSec().toFixed(1)}
                   s)
                 </Match>
                 <Match when={compilation.status === "fatal"}>
-                  ❌Fatal error
+                  ❌ Fatal error
                 </Match>
               </Switch>
             </div>
@@ -550,14 +561,7 @@ export function App() {
               />
             </Show>
           </div>
-        </div>
 
-        <div
-          class="paragraphs-column"
-          onFocusIn={() => setFocuses("exe", true)}
-          onFocusOut={() => setFocuses("exe", false)}
-        >
-          <h2 class="heading2">Execution</h2>
           <div>
             <label for="bf-code">brainf*ck</label>
             <Show when={bfCodeSize() >= 1}> ({bfCodeSize()} commands)</Show>
@@ -570,63 +574,70 @@ export function App() {
               disabled={compilation.status === "compiling"}
             />
           </div>
-          <Show when={bfError() !== ""}>
-            <div>
-              <CodeDisplayArea code={bfError()} variant={"error"} />
-            </div>
-          </Show>
-          <div class="forms-column">
-            <div>
-              <label for="bf-input">Input</label> ({bfInputLines()} lines)
-              <CodeArea
-                id="bf-input"
-                ref={bfInputAreaRef}
-                onUpdate={_setBfInput}
-                defaultValue={bfInput()}
-                readonly={isBfRunning()}
-              />
-            </div>
-            <div class="inputs-container">
-              <button
-                ref={bfRunButton}
-                class="input expand"
-                onClick={runBf}
-                disabled={isBfRunning()}
-              >
-                {"Run "}
-                <CtrlEnterText disabled={!focuses.exe} />
-              </button>
-              <button
-                class="input expand"
-                onClick={stopBf}
-                disabled={!isBfRunning()}
-              >
-                Stop
-              </button>
-            </div>
+
+          <div>
+            <label for="bf-input">Input</label> ({bfInputLines()} lines)
+            <CodeArea
+              id="bf-input"
+              ref={bfInputAreaRef}
+              onUpdate={_setBfInput}
+              defaultValue={bfInput()}
+              readonly={isBfRunning()}
+            />
           </div>
 
-          <form onSubmit={handleSubmitBfInteractiveInput}>
-            <label for="interactive-input">Interactive Input</label>
-            <div class="inputs-container">
-              <input
-                id="interactive-input"
-                type="text"
-                ref={bfInteractiveInputRef}
-                spellcheck={false}
-                disabled={!isBfInputRequired()}
-                autocomplete="off"
-                class="input interactive-input expand"
-              />
-              <button
-                type="submit"
-                class="input"
-                disabled={!isBfInputRequired()}
-              >
-                Enter
-              </button>
+          <details>
+            <summary class="settings-summary">Run Settings</summary>
+            <table class="settings-table">
+              <tbody>
+                <tr>
+                  <td>Array length</td>
+                  <td>
+                    <input type="number" value="100000" disabled />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </details>
+
+          <div class="inputs-container">
+            <button
+              ref={bfRunButton}
+              class="input expand"
+              onClick={runBf}
+              disabled={isBfRunning()}
+            >
+              {"Run "}
+              <CtrlEnterText disabled={!focuses.exe} />
+            </button>
+            <button
+              class="input expand"
+              onClick={stopBf}
+              disabled={!isBfRunning()}
+            >
+              Stop
+            </button>
+          </div>
+        </div>
+        <div class="paragraphs-column">
+          <div class="forms-column">
+            <div>
+              {/* TODO: あとで見直す */}
+              <Switch>
+                <Match when={bfError() !== ""}>❌ Failed to run</Match>
+                <Match when={!isBfRunning()}>🟦 Ready to run</Match>
+                <Match when={isBfInputRequired()}>
+                  ⏸️ Additional input required
+                </Match>
+                <Match when={isBfRunning()}>⌛Running ...</Match>
+              </Switch>
             </div>
-          </form>
+            <Show when={bfError() !== ""}>
+              <div>
+                <CodeDisplayArea code={bfError()} variant={"error"} />
+              </div>
+            </Show>
+          </div>
 
           <div>
             Output
@@ -635,6 +646,31 @@ export function App() {
               cursor={isBfRunning() ? "zerowidth" : "eof"}
             />
           </div>
+
+          <Show when={isBfInputRequired()}>
+            {/* TODO: 一度出現したら残るようにする */}
+            <form onSubmit={handleSubmitBfInteractiveInput}>
+              <label for="interactive-input">Additional Input</label>
+              <div class="inputs-container">
+                <input
+                  id="interactive-input"
+                  type="text"
+                  ref={bfInteractiveInputRef}
+                  spellcheck={false}
+                  disabled={!isBfInputRequired()}
+                  autocomplete="off"
+                  class="input interactive-input expand"
+                />
+                <button
+                  type="submit"
+                  class="input"
+                  disabled={!isBfInputRequired()}
+                >
+                  Enter
+                </button>
+              </div>
+            </form>
+          </Show>
         </div>
       </div>
     </div>
