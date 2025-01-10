@@ -148,8 +148,6 @@ export function App() {
     return cnt;
   });
 
-  let bfRunButton!: HTMLButtonElement;
-
   type CompilationStatus =
     | "ready"
     | "compiling"
@@ -258,7 +256,25 @@ export function App() {
     }
   };
 
+  // フォーカスの状態を追う
+  // 主にショートカットキーで使う
+  const [focuses, setFocuses] = createStore({
+    bfml: false,
+    bfmlSettings: false,
+    run: false,
+  });
+  const ctrlEnterAction = () => {
+    if (focuses.bfml || focuses.bfmlSettings) {
+      return "compile";
+    } else if (focuses.run) {
+      return "run";
+    } else {
+      return undefined;
+    }
+  };
+
   // インタプリタに関すること
+  let bfRunButton!: HTMLButtonElement;
   let bfInputAreaRef!: CodeAreaRef;
   const [bfInput, _setBfInput] = createSignal("");
   const bfInputLines = createMemo(() => {
@@ -306,7 +322,11 @@ export function App() {
     // console.log("%f seconds", (Date.now() - bfStartTime) / 1000);
     setIsBfInputRequired(false);
     _setBfRunner(undefined);
-    bfRunButton.focus();
+    if (!focuses.run) {
+      // フォーカスがない場合、実行ボタンにフォーカスする
+      // Ctrl + Enterで実行する場合はフォーカスが残るので、例えばInputを編集しながら連続で実行することができる
+      bfRunButton.focus();
+    }
   };
 
   const handleBfRunnerEvent = (ev: BfRunner.RunnerEvent) => {
@@ -386,20 +406,6 @@ export function App() {
   };
 
   // キーボードショートカット
-  const [focuses, setFocuses] = createStore({
-    bfml: false,
-    bfmlSettings: false,
-    run: false,
-  });
-  const ctrlEnterAction = () => {
-    if (focuses.bfml || focuses.bfmlSettings) {
-      return "compile";
-    } else if (focuses.run) {
-      return "run";
-    } else {
-      return undefined;
-    }
-  }
   const handleCtrlEnter = (event: KeyboardEvent) => {
     if (
       event.key === "Enter" &&
@@ -459,7 +465,9 @@ export function App() {
             disabled={!canCompile()}
           >
             {"Compile "}
-            <CtrlEnterText disabled={ctrlEnterAction() !== "compile" || !canCompile()} />
+            <CtrlEnterText
+              disabled={ctrlEnterAction() !== "compile" || !canCompile()}
+            />
           </button>
           <button
             class="input expand"
@@ -619,7 +627,9 @@ export function App() {
               disabled={!canRunBf()}
             >
               {"Run "}
-              <CtrlEnterText disabled={ctrlEnterAction() !== "run" || !canRunBf()} />
+              <CtrlEnterText
+                disabled={ctrlEnterAction() !== "run" || !canRunBf()}
+              />
             </button>
             <button
               class="input expand"
