@@ -176,8 +176,9 @@ export function App() {
   let optimizationLevelSelect!: HTMLSelectElement;
   let timeoutSelect!: HTMLSelectElement;
 
+  const canCompile = () => compilation.status !== "compiling";
   const compile = async () => {
-    if (compilation.status === "compiling") {
+    if (!canCompile()) {
       return;
     }
 
@@ -337,8 +338,9 @@ export function App() {
     }
   };
 
+  const canRunBf = () => !isBfRunning() && bfCodeSize() > 0;
   const runBf = () => {
-    if (isBfRunning()) {
+    if (!canRunBf()) {
       return;
     }
     setBfError("");
@@ -384,21 +386,30 @@ export function App() {
   };
 
   // キーボードショートカット
-  // TODO: 直す
   const [focuses, setFocuses] = createStore({
-    left: false,
-    codegen: false,
-    exe: false,
+    bfml: false,
+    bfmlSettings: false,
+    run: false,
   });
+  const ctrlEnterAction = () => {
+    if (focuses.bfml || focuses.bfmlSettings) {
+      return "compile";
+    } else if (focuses.run) {
+      return "run";
+    } else {
+      return undefined;
+    }
+  }
   const handleCtrlEnter = (event: KeyboardEvent) => {
     if (
       event.key === "Enter" &&
       (event.ctrlKey || event.metaKey) &&
       !event.repeat
     ) {
-      if (focuses.left || focuses.codegen) {
+      const action = ctrlEnterAction();
+      if (action === "compile") {
         compile();
-      } else if (focuses.exe) {
+      } else if (action === "run") {
         runBf();
       }
     }
@@ -414,8 +425,8 @@ export function App() {
       {/* 左 */}
       <div
         class="left pad"
-        onFocusIn={() => setFocuses("left", true)}
-        onFocusOut={() => setFocuses("left", false)}
+        onFocusIn={() => setFocuses("bfml", true)}
+        onFocusOut={() => setFocuses("bfml", false)}
       >
         <div class="inputs-container">
           <select
@@ -445,10 +456,10 @@ export function App() {
           <button
             class="input expand"
             onClick={compile}
-            disabled={compilation.status === "compiling"}
+            disabled={!canCompile()}
           >
             {"Compile "}
-            <CtrlEnterText disabled={!focuses.left && !focuses.codegen} />
+            <CtrlEnterText disabled={ctrlEnterAction() !== "compile" || !canCompile()} />
           </button>
           <button
             class="input expand"
@@ -464,8 +475,8 @@ export function App() {
       <div class="right pad sections-column">
         <div
           class="paragraphs-column"
-          onFocusIn={() => setFocuses("codegen", true)}
-          onFocusOut={() => setFocuses("codegen", false)}
+          onFocusIn={() => setFocuses("bfmlSettings", true)}
+          onFocusOut={() => setFocuses("bfmlSettings", false)}
         >
           <details>
             <summary class="settings-summary">Compilation Settings</summary>
@@ -520,8 +531,8 @@ export function App() {
 
         <div
           class="paragraphs-column"
-          onFocusIn={() => setFocuses("exe", true)}
-          onFocusOut={() => setFocuses("exe", false)}
+          onFocusIn={() => setFocuses("run", true)}
+          onFocusOut={() => setFocuses("run", false)}
         >
           <div class="forms-column">
             <div>
@@ -605,10 +616,10 @@ export function App() {
               ref={bfRunButton}
               class="input expand"
               onClick={runBf}
-              disabled={isBfRunning()}
+              disabled={!canRunBf()}
             >
               {"Run "}
-              <CtrlEnterText disabled={!focuses.exe} />
+              <CtrlEnterText disabled={ctrlEnterAction() !== "run" || !canRunBf()} />
             </button>
             <button
               class="input expand"
@@ -624,6 +635,7 @@ export function App() {
             <div>
               {/* TODO: あとで見直す */}
               <Switch>
+                <Match when={bfCodeSize() === 0}>⏹️ No bf code to run</Match>
                 <Match when={bfError() !== ""}>❌ Failed to run</Match>
                 <Match when={!isBfRunning()}>🟦 Ready to run</Match>
                 <Match when={isBfInputRequired()}>
