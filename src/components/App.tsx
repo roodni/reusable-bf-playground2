@@ -376,7 +376,8 @@ export function App() {
     const optimized = BfOptimizer.optimize(parseResult.commands);
     // const optimized = parseResult.commands;
     const input = bfInput();
-    const runner = new BfRunner.Runner(optimized, input, handleBfRunnerEvent, {
+    const runner = new BfRunner.Runner();
+    runner.run(optimized, input, handleBfRunnerEvent, {
       mode: "utf8",
     });
     _setBfRunner(runner);
@@ -386,7 +387,7 @@ export function App() {
   const stopBf = () => {
     const runner = bfRunner();
     if (runner) {
-      runner.terminate();
+      runner.abort();
       afterBfTerminated();
     }
   };

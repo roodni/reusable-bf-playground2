@@ -58,7 +58,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
           reject(ev.kind);
         }
       };
-      new Runner(commands, input, handler, {
+      new Runner().run(commands, input, handler, {
         mode: "utf8",
       });
     });
@@ -72,7 +72,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
         const ibuf = [...input];
         let obuf = "";
 
-        let runner: Runner;
+        const runner = new Runner();
         const handler = (ev: RunnerEvent) => {
           if (ev.t === "input") {
             const c = ibuf.shift();
@@ -89,7 +89,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
             reject(ev.kind);
           }
         };
-        runner = new Runner(commands, "", handler, {
+        runner.run(commands, "", handler, {
           mode: "utf8",
         });
       });
@@ -114,7 +114,7 @@ describe("ポインタ範囲外エラーが発生する", () => {
           reject();
         }
       };
-      new Runner(commands, "", handler, {
+      new Runner().run(commands, "", handler, {
         mode: "utf8",
       });
     });

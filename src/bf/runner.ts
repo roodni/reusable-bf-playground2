@@ -53,28 +53,57 @@ export type RunnerEvent =
       kind: "pointer" | "fatal";
     };
 
-export class Runner {
-  private worker = new BfWorker();
-  private textCodec: TextCodec;
-  private isInputRequired = false;
+type RunnerState = Readonly<
+  | { t: "initial" }
+  | { t: "workerLoadFailed" }
+  | { t: "running"; textCodec: TextCodec; handler: (e: RunnerEvent) => void }
+  | { t: "terminated" }
+>;
 
-  constructor(
+export class Runner {
+  private state: RunnerState = { t: "initial" };
+  private worker: Worker;
+
+  constructor() {
+    this.worker = new BfWorker();
+    this.worker.addEventListener("error", (ev) => {
+      if (this.state.t === "initial") {
+        console.log("Failed to load worker", ev);
+        this.worker.terminate();
+        this.state = { t: "workerLoadFailed" };
+      }
+    });
+  }
+
+  run(
     commands: OptimizedCommand[],
     initialInput: string,
     handler: (e: RunnerEvent) => void,
     configs: Configs,
   ) {
-    let cellType: CellType;
-    switch (configs.mode) {
-      case "utf8":
-        cellType = "uint8";
-        this.textCodec = new Utf8Codec();
-        break;
-      case "utf16":
-        cellType = "uint16";
-        this.textCodec = new Utf16Codec();
-        break;
+    if (this.state.t === "workerLoadFailed") {
+      this.state = { t: "terminated" };
+      setTimeout(() => handler({ t: "error", kind: "fatal" }));
+      return;
     }
+    if (this.state.t !== "initial") {
+      throw new Error(`Unexpected run (state = ${this.state.t})`);
+    }
+
+    const [cellType, textCodec]: [CellType, TextCodec] = (() => {
+      switch (configs.mode) {
+        case "utf16":
+          return ["uint16", new Utf16Codec()];
+        case "utf8":
+          return ["uint8", new Utf8Codec()];
+      }
+    })();
+    this.state = { t: "running", textCodec, handler };
+
+    const terminate = () => {
+      this.worker.terminate();
+      this.state = { t: "terminated" };
+    };
 
     this.worker.addEventListener(
       "message",
@@ -83,35 +112,36 @@ export class Runner {
         // console.log(msg);
         switch (msg.t) {
           case "input":
-            this.isInputRequired = true;
             handler({ t: "input" });
             break;
           case "output":
             handler({
               t: "output",
-              output: this.textCodec.decode(msg.outputs),
+              output: textCodec.decode(msg.outputs),
             });
             this.worker.postMessage({
               t: "continue",
             } satisfies MessageToWorker);
             break;
           case "finish":
-            this.worker.terminate();
+            terminate();
             handler({ t: "finish" });
             break;
           case "error":
-            this.worker.terminate();
+            terminate();
             handler({ t: "error", kind: msg.kind });
             break;
         }
       },
     );
+
     this.worker.addEventListener("error", (ev) => {
-      console.log("worker stopped for some reason", ev);
-      this.worker.terminate();
+      terminate();
+      console.log("Worker stopped for some reason", ev);
       handler({ t: "error", kind: "fatal" });
     });
-    const inputs = this.textCodec.encode(initialInput);
+
+    const inputs = textCodec.encode(initialInput);
     const msg: MessageToWorker = {
       t: "start",
       cellType,
@@ -122,20 +152,21 @@ export class Runner {
   }
 
   input(s: string) {
-    if (!this.isInputRequired) {
-      throw new Error("input ignored");
+    if (this.state.t !== "running") {
+      throw new Error(`Unexpected input (state = ${this.state.t})`);
     }
-    const inputs = this.textCodec.encode(s);
-    if (inputs.length > 0) {
-      this.isInputRequired = false;
-      this.worker.postMessage({
-        t: "continue",
-        inputs,
-      } satisfies MessageToWorker);
-    }
+    const inputs = this.state.textCodec.encode(s);
+    this.worker.postMessage({
+      t: "continue",
+      inputs,
+    } satisfies MessageToWorker);
   }
 
-  terminate() {
+  abort() {
+    if (this.state.t !== "running") {
+      throw new Error(`Unexpected abort (state = ${this.state.t})`);
+    }
     this.worker.terminate();
+    this.state = { t: "terminated" };
   }
 }
