@@ -130,7 +130,7 @@ export function App() {
     const name = file.settings.name;
     let session = sessions.get(name);
     if (!session) {
-      const s = ace.createEditSession(file.settings.code, new BfmlMode()); // 第二引数は文字列でも渡せそうなんだが型が合わない
+      const s = ace.createEditSession(file.settings.code, new BfmlMode());
       configureAceSession(s);
       s.on("change", () => {
         const isChanged = s.getValue() !== file.settings.code;
