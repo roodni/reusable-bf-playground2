@@ -54,23 +54,25 @@ export type RunnerEvent =
     };
 
 type RunnerState = Readonly<
-  | { t: "initial" }
-  | { t: "workerLoadFailed" }
+  | { t: "initial"; workerLoadFailed: boolean }
   | { t: "running"; textCodec: TextCodec; handler: (e: RunnerEvent) => void }
   | { t: "terminated" }
 >;
 
 export class Runner {
-  private state: RunnerState = { t: "initial" };
+  private state: RunnerState = { t: "initial", workerLoadFailed: false };
   private worker: Worker;
 
   constructor() {
     this.worker = new BfWorker();
     this.worker.addEventListener("error", (ev) => {
+      // 初期化時にワーカーでエラーが起きたらフラグを立てる。通信エラーを想定している
+      // そのときは run のタイミングで再度ワーカーの起動を試行する
+      // 軽量なので別に事前に読み込んでおく必要はないんだが、まあそういうことしたくなる気分のときもある
       if (this.state.t === "initial") {
         console.log("Failed to load worker", ev);
         this.worker.terminate();
-        this.state = { t: "workerLoadFailed" };
+        this.state = { t: "initial", workerLoadFailed: true };
       }
     });
   }
@@ -81,13 +83,12 @@ export class Runner {
     handler: (e: RunnerEvent) => void,
     configs: Configs,
   ) {
-    if (this.state.t === "workerLoadFailed") {
-      this.state = { t: "terminated" };
-      setTimeout(() => handler({ t: "error", kind: "fatal" }));
-      return;
-    }
     if (this.state.t !== "initial") {
       throw new Error(`Unexpected run (state = ${this.state.t})`);
+    }
+    if (this.state.workerLoadFailed) {
+      console.log("Reload worker");
+      this.worker = new BfWorker();
     }
 
     const [cellType, textCodec]: [CellType, TextCodec] = (() => {
