@@ -19,7 +19,7 @@ import * as BfParser from "../bf/parser";
 import * as BfRunner from "../bf/runner";
 import { CodeArea, CodeAreaRef, CodeDisplayArea } from "./CodeArea";
 import { FileSettings, fileSettingsList } from "./fileSettings";
-import "./highlighter.js";
+import { BfmlMode } from "./highlighter.js";
 
 // Ace Editorの設定をここに書く
 const aceEditorOptions: Partial<ace.Ace.EditorOptions> = {
@@ -120,7 +120,6 @@ export function App() {
   };
 
   // ファイル選択に変更があったら、エディタの内容を切り替える
-  const BfmlMode = ace.require("ace/mode/bfml").Mode;
   createEffect(() => {
     const editor = bfmlEditor();
     if (!editor) {
