@@ -689,7 +689,6 @@ export function App() {
         <div class="paragraphs-column">
           <div class="forms-column">
             <div>
-              {/* TODO: あとで見直す */}
               <Switch>
                 <Match when={runResult.status === "ready"}>
                   🟦 Ready to run
