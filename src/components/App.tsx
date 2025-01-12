@@ -634,7 +634,7 @@ export function App() {
           </div>
 
           <div>
-            <label for="bf-code">brainf*ck</label>
+            <label for="bf-code">brainf**k</label>
             <Show when={bfCodeSize() >= 1}> ({bfCodeSize()} commands)</Show>
             <CodeArea
               id="bf-code"
