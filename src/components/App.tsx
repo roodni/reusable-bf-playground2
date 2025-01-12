@@ -43,6 +43,26 @@ const CtrlEnterText: Component<{ disabled: boolean }> = (props) => (
 );
 
 export function App() {
+  // フォーカスの状態を追う
+  // 主にショートカットキーで使う
+  const [focuses, setFocuses] = createStore({
+    bfml: false,
+    bfmlSettings: false,
+    run: false,
+  });
+  const ctrlEnterAction = () => {
+    if (focuses.bfml || focuses.bfmlSettings) {
+      return "compile";
+    } else if (focuses.run) {
+      return "run";
+    } else {
+      return undefined;
+    }
+  };
+
+  //
+  // エディタに関すること
+  //
   type BfmlFile = {
     settings: FileSettings;
     isChanged: boolean;
@@ -77,7 +97,7 @@ export function App() {
     window.removeEventListener("beforeunload", handleBeforeUnload);
   });
 
-  // ファイル選択に関すること
+  // ファイル選択
   const [selectingFileName, setSelectingFileName] = createSignal(
     fileSettingsList[0].name,
   );
@@ -133,7 +153,9 @@ export function App() {
     session.doc.setValue(file.settings.code);
   };
 
+  //
   // コンパイルに関すること
+  //
   let bfAreaRef!: CodeAreaRef;
   const [bfCode, _setBfCode] = createSignal("");
   const bfCodeSize = createMemo(() => {
@@ -207,10 +229,19 @@ export function App() {
       worker.addEventListener("message", (res) => {
         resolve(() => {
           bfAreaRef.update(res.data.out);
+          const succeed: boolean = res.data.success;
           setCompilation({
-            status: res.data.success ? "succeed" : "failed",
+            status: succeed ? "succeed" : "failed",
             err: res.data.err,
           });
+          if (succeed && !isBfRunning()) {
+            // コンパイルに成功したら、bf実行のステータスを消す
+            setRunResult({
+              status: "ready",
+              error: "",
+              output: "",
+            });
+          }
         });
       });
       worker.addEventListener("error", (e) => {
@@ -245,6 +276,8 @@ export function App() {
     callback();
   };
 
+  // bfコードが直接編集されたらコンパイルのステータスを消す
+  // もはやコンパイル結果ではなくなるので
   const handleBfAreaInput = () => {
     switch (compilation.status) {
       case "succeed":
@@ -253,23 +286,6 @@ export function App() {
       case "fatal":
         setCompilation({ status: "ready", err: "" });
         break;
-    }
-  };
-
-  // フォーカスの状態を追う
-  // 主にショートカットキーで使う
-  const [focuses, setFocuses] = createStore({
-    bfml: false,
-    bfmlSettings: false,
-    run: false,
-  });
-  const ctrlEnterAction = () => {
-    if (focuses.bfml || focuses.bfmlSettings) {
-      return "compile";
-    } else if (focuses.run) {
-      return "run";
-    } else {
-      return undefined;
     }
   };
 
