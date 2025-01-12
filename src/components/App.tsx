@@ -471,7 +471,13 @@ export function App() {
     <div class="app" onKeyDown={handleCtrlEnter}>
       {/* ヘッダー */}
       <div class="header pad">
-        <h1 class="heading1">Reusable-bf Playground</h1>
+        <h1 class="header-title">Reusable-bf Playground</h1>
+        <div>
+          🔗
+          <a href="https://github.com/roodni/reusable-bf" target="_blank">
+            GitHub
+          </a>
+        </div>
       </div>
 
       {/* 左 */}

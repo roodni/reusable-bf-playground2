@@ -75,12 +75,22 @@ body {
     border-bottom-width: 1px;
     border-bottom-style: dotted;
     border-bottom-color: gray;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
   }
   > .left {
     display: grid;
     grid-template-rows: max-content 1fr;
     gap: var(--form-gap);
   }
+}
+
+h1.header-title {
+  font-size: 1.4rem;
+  margin: 0;
 }
 
 .pad {
@@ -102,10 +112,6 @@ body {
   }
 }
 
-.heading1 {
-  font-size: 1.3rem;
-  margin: 0;
-}
 .heading2 {
   font-size: 1.2rem;
   margin: 0;
