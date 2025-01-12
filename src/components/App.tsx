@@ -334,7 +334,7 @@ export function App() {
   type RunResult = {
     status: "ready" | "running" | "finished" | "error" | "aborted";
     isInputRequired: boolean;
-    showAdditionalInputFrom: boolean;
+    additionalInputUsed: boolean; // 追加入力が一度でも要求されたかどうか
     error: string;
     output: string;
     elapsedTime: number;
@@ -342,7 +342,7 @@ export function App() {
   const [runResult, setRunResult] = createStore<RunResult>({
     status: "ready",
     isInputRequired: false,
-    showAdditionalInputFrom: false,
+    additionalInputUsed: false,
     error: "",
     output: "",
     elapsedTime: 0,
@@ -353,7 +353,6 @@ export function App() {
   const afterBfTerminated = () => {
     setRunResult({
       isInputRequired: false,
-      showAdditionalInputFrom: false,
       elapsedTime: Date.now() - bfStartTime,
     });
     bfRunner = new BfRunner.Runner();
@@ -368,7 +367,7 @@ export function App() {
       case "input":
         setRunResult({
           isInputRequired: true,
-          showAdditionalInputFrom: true,
+          additionalInputUsed: true,
         });
         bfInteractiveInputRef.focus();
         break;
@@ -409,6 +408,7 @@ export function App() {
       status: "running",
       error: "",
       output: "",
+      additionalInputUsed: false,
     });
 
     const code = bfCode();
@@ -438,7 +438,7 @@ export function App() {
     }
   };
   const submitBfInteractiveInput = () => {
-    if (!runResult.isInputRequired) {
+    if (isBfRunning() && !runResult.isInputRequired) {
       return;
     }
     const i = bfInteractiveInputRef.value + "\n";
@@ -704,8 +704,11 @@ export function App() {
                   ⌛ Running ...
                 </Match>
                 <Match when={runResult.status === "finished"}>
-                  ✅ Run finished (
-                  {(runResult.elapsedTime / 1000).toFixed(1) + " s"})
+                  ✅ Run finished
+                  <Show when={!runResult.additionalInputUsed}>
+                    {" "}
+                    ({(runResult.elapsedTime / 1000).toFixed(1)} s)
+                  </Show>
                 </Match>
                 <Match when={runResult.status === "error"}>❌ Run failed</Match>
                 <Match when={runResult.status === "aborted"}>❌ Aborted</Match>
@@ -726,7 +729,7 @@ export function App() {
             />
           </div>
 
-          <Show when={runResult.showAdditionalInputFrom}>
+          <Show when={isBfRunning() && runResult.additionalInputUsed}>
             <form onSubmit={handleSubmitBfInteractiveInput}>
               {/* 複数行のコピペに対応したい */}
               <label for="interactive-input">Additional Input</label>
