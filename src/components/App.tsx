@@ -273,9 +273,14 @@ export function App() {
     }
   };
 
+  //
   // インタプリタに関すること
-  let bfRunButton!: HTMLButtonElement;
+  //
   let bfInputAreaRef!: CodeAreaRef;
+  let bfRunButton!: HTMLButtonElement;
+  let bfInteractiveInputRef!: HTMLInputElement;
+
+  // 入力
   const [bfInput, _setBfInput] = createSignal("");
   const bfInputLines = createMemo(() => {
     const text = bfInput();
@@ -306,100 +311,124 @@ export function App() {
     }),
   );
 
-  let bfInteractiveInputRef!: HTMLInputElement;
+  // 実行
+  let bfRunner = new BfRunner.Runner();
+  let bfStartTime = 0;
 
-  // この辺煩雑なのでどうにかしたい
-  const [bfRunner, _setBfRunner] = createSignal<BfRunner.Runner | undefined>(
-    undefined,
-  );
-  const isBfRunning = () => bfRunner() !== undefined;
-  const [isBfInputRequired, setIsBfInputRequired] = createSignal(false);
-  const [bfError, setBfError] = createSignal("");
-  const [bfOutput, setBfOutput] = createSignal("");
-  // let bfStartTime = 0;
+  type RunResult = {
+    status: "ready" | "running" | "finished" | "error" | "aborted";
+    isInputRequired: boolean;
+    showAdditionalInputFrom: boolean;
+    error: string;
+    output: string;
+    elapsedTime: number;
+  };
+  const [runResult, setRunResult] = createStore<RunResult>({
+    status: "ready",
+    isInputRequired: false,
+    showAdditionalInputFrom: false,
+    error: "",
+    output: "",
+    elapsedTime: 0,
+  });
+
+  const isBfRunning = () => runResult.status === "running";
 
   const afterBfTerminated = () => {
-    // console.log("%f seconds", (Date.now() - bfStartTime) / 1000);
-    setIsBfInputRequired(false);
-    _setBfRunner(undefined);
+    setRunResult({
+      isInputRequired: false,
+      showAdditionalInputFrom: false,
+      elapsedTime: Date.now() - bfStartTime,
+    });
+    bfRunner = new BfRunner.Runner();
     if (!focuses.run) {
       // フォーカスがない場合、実行ボタンにフォーカスする
       // Ctrl + Enterで実行する場合はフォーカスが残るので、例えばInputを編集しながら連続で実行することができる
       bfRunButton.focus();
     }
   };
-
   const handleBfRunnerEvent = (ev: BfRunner.RunnerEvent) => {
     switch (ev.t) {
       case "input":
-        setIsBfInputRequired(true);
+        setRunResult({
+          isInputRequired: true,
+          showAdditionalInputFrom: true,
+        });
         bfInteractiveInputRef.focus();
         break;
       case "output": {
         // メモリ食いつぶし防止のため、出力文字数には制限を設ける
-        const output = (bfOutput() + ev.output).slice(-10000);
-        setBfOutput(output);
+        // あまり綺麗ではない。うまい方法を探したい
+        const output = (runResult.output + ev.output).slice(-10000);
+        setRunResult({ output });
         break;
       }
       case "finish":
+        setRunResult({ status: "finished" });
         afterBfTerminated();
         break;
-      case "error":
+      case "error": {
+        let error: string;
         switch (ev.kind) {
           case "pointer":
-            setBfError("Error: Pointer out of range");
+            error = "Error: Pointer out of range";
             break;
           case "fatal":
-            setBfError("Fatal error");
+            error = "Fatal error";
             break;
         }
+        setRunResult({ status: "error", error });
         afterBfTerminated();
         break;
+      }
     }
   };
 
-  const canRunBf = () => !isBfRunning() && bfCodeSize() > 0;
+  const canRunBf = () => !isBfRunning();
   const runBf = () => {
     if (!canRunBf()) {
       return;
     }
-    setBfError("");
-    setBfOutput("");
+    setRunResult({
+      status: "running",
+      error: "",
+      output: "",
+    });
+
     const code = bfCode();
     const parseResult = BfParser.parse(code);
     if (parseResult.t === "error") {
       const msg = `Syntax Error: ${parseResult.msg} (line ${parseResult.line}, col ${parseResult.col})`;
-      setBfError(msg);
+      setRunResult({
+        status: "error",
+        error: msg,
+      });
       return;
     }
 
     const optimized = BfOptimizer.optimize(parseResult.commands);
     // const optimized = parseResult.commands;
     const input = bfInput();
-    const runner = new BfRunner.Runner();
-    runner.run(optimized, input, handleBfRunnerEvent, {
+    bfStartTime = Date.now();
+    bfRunner.run(optimized, input, handleBfRunnerEvent, {
       mode: "utf8",
     });
-    _setBfRunner(runner);
-    setIsBfInputRequired(false);
-    // bfStartTime = Date.now();
   };
   const stopBf = () => {
-    const runner = bfRunner();
-    if (runner) {
-      runner.abort();
+    if (isBfRunning()) {
+      bfRunner.abort();
+      setRunResult({ status: "aborted" });
       afterBfTerminated();
     }
   };
   const submitBfInteractiveInput = () => {
-    const runner = bfRunner();
-    if (!runner || !isBfInputRequired()) {
+    if (!runResult.isInputRequired) {
       return;
     }
     const i = bfInteractiveInputRef.value + "\n";
     bfInteractiveInputRef.value = "";
-    runner.input(i);
-    setIsBfInputRequired(false);
+    setRunResult({ isInputRequired: false });
+    bfRunner.input(i);
   };
   const handleSubmitBfInteractiveInput = (ev: SubmitEvent) => {
     submitBfInteractiveInput();
@@ -646,18 +675,29 @@ export function App() {
             <div>
               {/* TODO: あとで見直す */}
               <Switch>
-                <Match when={bfCodeSize() === 0}>⏹️ No bf code to run</Match>
-                <Match when={bfError() !== ""}>❌ Failed to run</Match>
-                <Match when={!isBfRunning()}>🟦 Ready to run</Match>
-                <Match when={isBfInputRequired()}>
+                <Match when={runResult.status === "ready"}>
+                  🟦 Ready to run
+                </Match>
+                <Match
+                  when={
+                    runResult.status === "running" && runResult.isInputRequired
+                  }
+                >
                   ⏸️ Additional input required
                 </Match>
-                <Match when={isBfRunning()}>⌛Running ...</Match>
+                <Match when={runResult.status === "running"}>
+                  ⌛ Running ...
+                </Match>
+                <Match when={runResult.status === "finished"}>
+                  ✅ Run finished
+                </Match>
+                <Match when={runResult.status === "error"}>❌ Run failed</Match>
+                <Match when={runResult.status === "aborted"}>❌ Aborted</Match>
               </Switch>
             </div>
-            <Show when={bfError() !== ""}>
+            <Show when={runResult.error !== ""}>
               <div>
-                <CodeDisplayArea code={bfError()} variant={"error"} />
+                <CodeDisplayArea code={runResult.error} variant={"error"} />
               </div>
             </Show>
           </div>
@@ -665,29 +705,29 @@ export function App() {
           <div>
             Output
             <CodeDisplayArea
-              code={bfOutput()}
+              code={runResult.output}
               cursor={isBfRunning() ? "zerowidth" : "eof"}
             />
           </div>
 
-          <Show when={isBfInputRequired()}>
-            {/* TODO: 一度出現したら残るようにする */}
+          <Show when={runResult.showAdditionalInputFrom}>
             <form onSubmit={handleSubmitBfInteractiveInput}>
+              {/* 複数行のコピペに対応したい */}
               <label for="interactive-input">Additional Input</label>
               <div class="inputs-container">
                 <input
                   id="interactive-input"
                   type="text"
                   ref={bfInteractiveInputRef}
+                  disabled={!runResult.isInputRequired}
                   spellcheck={false}
-                  disabled={!isBfInputRequired()}
                   autocomplete="off"
                   class="input interactive-input expand"
                 />
                 <button
                   type="submit"
                   class="input"
-                  disabled={!isBfInputRequired()}
+                  disabled={!runResult.isInputRequired}
                 >
                   Enter
                 </button>
