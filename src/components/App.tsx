@@ -705,7 +705,8 @@ export function App() {
                   ⌛ Running ...
                 </Match>
                 <Match when={runResult.status === "finished"}>
-                  ✅ Run finished
+                  ✅ Run finished (
+                  {(runResult.elapsedTime / 1000).toFixed(1) + " s"})
                 </Match>
                 <Match when={runResult.status === "error"}>❌ Run failed</Match>
                 <Match when={runResult.status === "aborted"}>❌ Aborted</Match>
