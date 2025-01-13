@@ -1,10 +1,9 @@
 import type { OptimizedCommand } from "./optimizer";
 
-export type CellType = "uint8" | "uint16";
 export type MessageToWorker =
   | {
       t: "start";
-      cellType: CellType;
+      cellType: "uint8" | "uint16";
       commands: OptimizedCommand[];
       inputs: number[];
       arrayLength: number;

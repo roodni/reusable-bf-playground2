@@ -1,10 +1,10 @@
 import type { OptimizedCommand } from "./optimizer";
-import type { CellType, MessageFromWorker, MessageToWorker } from "./worker";
+import type { MessageFromWorker, MessageToWorker } from "./worker";
 import BfWorker from "./worker?worker";
 
-export type Charset = "utf8" | "utf16";
+export type CellType = "uint8" | "uint16";
 export type Configs = {
-  mode: Charset;
+  cellType: CellType;
   arrayLength: number;
 };
 
@@ -28,15 +28,15 @@ class Utf8Codec implements TextCodec {
   }
 }
 
-class Utf16Codec implements TextCodec {
-  // TODO: 絵文字をうまく扱えない気がするので検証
-  encode(s: string) {
-    return [...s].map((c) => c.charCodeAt(0));
-  }
-  decode(a: number[]): string {
-    return String.fromCharCode(...a);
-  }
-}
+// class Utf16Codec implements TextCodec {
+//   // TODO: 絵文字をうまく扱えない気がするので検証
+//   encode(s: string) {
+//     return [...s].map((c) => c.charCodeAt(0));
+//   }
+//   decode(a: number[]): string {
+//     return String.fromCharCode(...a);
+//   }
+// }
 
 export type RunnerEvent =
   | {
@@ -92,14 +92,7 @@ export class Runner {
       this.worker = new BfWorker();
     }
 
-    const [cellType, textCodec]: [CellType, TextCodec] = (() => {
-      switch (configs.mode) {
-        case "utf16":
-          return ["uint16", new Utf16Codec()];
-        case "utf8":
-          return ["uint8", new Utf8Codec()];
-      }
-    })();
+    const textCodec = new Utf8Codec();
     this.state = { t: "running", textCodec, handler };
 
     const terminate = () => {
@@ -145,7 +138,7 @@ export class Runner {
 
     const msg: MessageToWorker = {
       t: "start",
-      cellType,
+      cellType: configs.cellType,
       commands,
       inputs: textCodec.encode(initialInput),
       arrayLength: configs.arrayLength,

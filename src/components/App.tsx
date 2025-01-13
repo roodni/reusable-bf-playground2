@@ -432,8 +432,8 @@ export function App() {
     const input = bfInput();
     bfStartTime = Date.now();
     bfRunner.run(optimized, input, handleBfRunnerEvent, {
-      mode: "utf8",
       arrayLength: bfRunSettings.arrayLength,
+      cellType: bfRunSettings.cellType,
     });
   };
   const stopBf = () => {

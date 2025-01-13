@@ -1,7 +1,9 @@
 import { Component, createRenderEffect, createUniqueId, Ref } from "solid-js";
+import type { CellType } from "../bf/runner";
 
 export type BfRunSettings = {
   arrayLength: number;
+  cellType: CellType;
 };
 
 export type BfRunSettingsRef = {
@@ -14,6 +16,7 @@ export const BfRunSettingsInputs: Component<{
 }> = (props) => {
   let runSettingsDetails!: HTMLDetailsElement;
   let arrayLengthInput!: HTMLInputElement;
+  let cellTypeSelect!: HTMLSelectElement;
 
   createRenderEffect(() => {
     const ref = props.ref as Exclude<typeof props.ref, BfRunSettingsRef>;
@@ -31,12 +34,14 @@ export const BfRunSettingsInputs: Component<{
       values() {
         return {
           arrayLength: arrayLengthInput.valueAsNumber,
+          cellType: cellTypeSelect.value as CellType,
         };
       },
     });
   });
 
   const arrayLengthId = createUniqueId();
+  const cellTypeId = createUniqueId();
 
   return (
     <details ref={runSettingsDetails}>
@@ -57,6 +62,17 @@ export const BfRunSettingsInputs: Component<{
                 min="1"
                 max="1000000"
               />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for={cellTypeId}>Cell type</label>
+            </td>
+            <td>
+              <select id={cellTypeId} ref={cellTypeSelect}>
+                <option value="uint8">8bit (0-255)</option>
+                <option value="uint16">16bit (0-65536)</option>
+              </select>
             </td>
           </tr>
         </tbody>
