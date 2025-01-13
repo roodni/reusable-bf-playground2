@@ -3,17 +3,19 @@ import type { MessageFromWorker, MessageToWorker } from "./worker";
 import BfWorker from "./worker?worker";
 
 export type CellType = "uint8" | "uint16";
+
 export type Configs = {
   cellType: CellType;
   arrayLength: number;
+  encoding: new () => TextCodec;
 };
 
-interface TextCodec {
+export interface TextCodec {
   encode(s: string): number[];
   decode(a: number[]): string;
 }
 
-class Utf8Codec implements TextCodec {
+export class Utf8Codec implements TextCodec {
   private textEncoder: TextEncoder;
   private textDecoder: TextDecoder;
   constructor() {
@@ -28,15 +30,18 @@ class Utf8Codec implements TextCodec {
   }
 }
 
-// class Utf16Codec implements TextCodec {
-//   // TODO: 絵文字をうまく扱えない気がするので検証
-//   encode(s: string) {
-//     return [...s].map((c) => c.charCodeAt(0));
-//   }
-//   decode(a: number[]): string {
-//     return String.fromCharCode(...a);
-//   }
-// }
+export class Utf16Codec implements TextCodec {
+  encode(s: string) {
+    const l = [];
+    for (let i = 0; i < s.length; i++) {
+      l.push(s.charCodeAt(i));
+    }
+    return l;
+  }
+  decode(a: number[]): string {
+    return String.fromCharCode(...a);
+  }
+}
 
 export type RunnerEvent =
   | {
@@ -92,7 +97,7 @@ export class Runner {
       this.worker = new BfWorker();
     }
 
-    const textCodec = new Utf8Codec();
+    const textCodec = new configs.encoding();
     this.state = { t: "running", textCodec, handler };
 
     const terminate = () => {

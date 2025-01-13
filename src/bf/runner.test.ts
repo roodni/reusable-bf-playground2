@@ -2,7 +2,14 @@ import "@vitest/web-worker";
 import { describe, expect, test } from "vitest";
 import { optimize } from "./optimizer";
 import { parse } from "./parser";
-import { CellType, Runner, RunnerEvent } from "./runner";
+import {
+  CellType,
+  Runner,
+  RunnerEvent,
+  TextCodec,
+  Utf16Codec,
+  Utf8Codec,
+} from "./runner";
 
 type TestCase = {
   label: string;
@@ -11,6 +18,7 @@ type TestCase = {
     i?: string;
     o: string;
     cellType?: CellType;
+    encoding?: new () => TextCodec;
   }[];
 };
 
@@ -53,6 +61,22 @@ const testCases: TestCase[] = [
       { i: "65534\n", o: "255", cellType: "uint8" },
     ],
   },
+  {
+    label: "文字コード",
+    code: ">>>>>>>>++++++++++<<<<<<<<+[>,----------<[-]>[++++++++++>>>>>>[>>>>>]>[<+>>>>>>]<<<<<[[-]<-<<<<]<[<<<<<]>>>>>>++++++++++<<<<<<<[->>>>>>[>>>>>]+[>>+<[>-]>[-<++++++++++>>]<<->+<[>-<<[-<<<<<]>>]>[-<++++++++++>>>>+>>>]<<<][<<<<<]<]>>>>>>[>>>>>]>[<+>>>>>>]<<<<<[>>>++++++++++++++++++++++++++++++++++++++++++++++++++++++++++<<<[->>>-<<<]>>>.<<<++++++++++++++++++++++++++++++++++++++++++++++++++++++++++>>>[-<<<->>>]<<<<-<<<<]<[<<<<<]<<++++++++++.>]<]",
+    runs: [
+      { i: "A0\n", o: "65\n48\n" },
+      { i: "あ\n", o: `${0xe3}\n${0x81}\n${0x82}\n` },
+      { i: "あ\n", o: "12354\n", cellType: "uint16", encoding: Utf16Codec },
+      { i: "あ\n", o: "12354\n", cellType: "uint16", encoding: Utf16Codec },
+      {
+        i: "🌕\n",
+        o: "55356\n57109\n",
+        cellType: "uint16",
+        encoding: Utf16Codec,
+      },
+    ],
+  },
 ];
 
 describe.each(testCases)("実行できる ($label)", (tc) => {
@@ -77,6 +101,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
       new Runner().run(commands, run.i ?? "", handler, {
         cellType: run.cellType ?? "uint8",
         arrayLength: 30000,
+        encoding: run.encoding ?? Utf8Codec,
       });
     });
     expect(output).toBe(run.o);
@@ -111,6 +136,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
       runner.run(commands, "", handler, {
         cellType: run.cellType ?? "uint8",
         arrayLength: 30000,
+        encoding: run.encoding ?? Utf8Codec,
       });
     });
     expect(output).toBe(run.o);
@@ -136,6 +162,7 @@ describe("ポインタ範囲外エラーが発生する", () => {
       new Runner().run(commands, "", handler, {
         cellType: "uint8",
         arrayLength: 5,
+        encoding: Utf8Codec,
       });
     });
 

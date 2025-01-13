@@ -1,9 +1,15 @@
 import { Component, createRenderEffect, createUniqueId, Ref } from "solid-js";
-import type { CellType } from "../bf/runner";
+import {
+  Utf16Codec,
+  Utf8Codec,
+  type CellType,
+  type TextCodec,
+} from "../bf/runner";
 
 export type BfRunSettings = {
   arrayLength: number;
   cellType: CellType;
+  encoding: new () => TextCodec;
 };
 
 export type BfRunSettingsRef = {
@@ -17,6 +23,7 @@ export const BfRunSettingsInputs: Component<{
   let runSettingsDetails!: HTMLDetailsElement;
   let arrayLengthInput!: HTMLInputElement;
   let cellTypeSelect!: HTMLSelectElement;
+  let encodingSelect!: HTMLSelectElement;
 
   createRenderEffect(() => {
     const ref = props.ref as Exclude<typeof props.ref, BfRunSettingsRef>;
@@ -32,9 +39,20 @@ export const BfRunSettingsInputs: Component<{
         }
       },
       values() {
+        let encoding = (() => {
+          switch (encodingSelect.value) {
+            case "utf-8":
+              return Utf8Codec;
+            case "utf-16":
+              return Utf16Codec;
+            default:
+              throw new Error("never");
+          }
+        })();
         return {
           arrayLength: arrayLengthInput.valueAsNumber,
           cellType: cellTypeSelect.value as CellType,
+          encoding,
         };
       },
     });
@@ -42,6 +60,7 @@ export const BfRunSettingsInputs: Component<{
 
   const arrayLengthId = createUniqueId();
   const cellTypeId = createUniqueId();
+  const encodingId = createUniqueId();
 
   return (
     <details ref={runSettingsDetails}>
@@ -72,6 +91,17 @@ export const BfRunSettingsInputs: Component<{
               <select id={cellTypeId} ref={cellTypeSelect}>
                 <option value="uint8">8bit (0-255)</option>
                 <option value="uint16">16bit (0-65536)</option>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for={encodingId}>Encoding</label>
+            </td>
+            <td>
+              <select id={encodingId} ref={encodingSelect}>
+                <option value="utf-8">UTF-8</option>
+                <option value="utf-16">UTF-16</option>
               </select>
             </td>
           </tr>

@@ -434,6 +434,7 @@ export function App() {
     bfRunner.run(optimized, input, handleBfRunnerEvent, {
       arrayLength: bfRunSettings.arrayLength,
       cellType: bfRunSettings.cellType,
+      encoding: bfRunSettings.encoding,
     });
   };
   const stopBf = () => {
