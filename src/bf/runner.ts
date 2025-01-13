@@ -8,6 +8,7 @@ export type Configs = {
   cellType: CellType;
   arrayLength: number;
   encoding: new () => TextCodec;
+  disableWrapAround: boolean;
 };
 
 export interface TextCodec {
@@ -56,7 +57,7 @@ export type RunnerEvent =
     }
   | {
       t: "error";
-      kind: "pointer" | "fatal";
+      kind: "pointer" | "overflow" | "fatal";
     };
 
 type RunnerState = Readonly<
@@ -147,6 +148,7 @@ export class Runner {
       commands,
       inputs: textCodec.encode(initialInput),
       arrayLength: configs.arrayLength,
+      disableWrapAround: configs.disableWrapAround,
     };
     this.worker.postMessage(msg);
   }

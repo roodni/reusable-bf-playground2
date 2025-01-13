@@ -381,15 +381,16 @@ export function App() {
         afterBfTerminated();
         break;
       case "error": {
-        let error: string;
-        switch (ev.kind) {
-          case "pointer":
-            error = "Error: Pointer out of range";
-            break;
-          case "fatal":
-            error = "Fatal error";
-            break;
-        }
+        const error = (() => {
+          switch (ev.kind) {
+            case "pointer":
+              return "Error: Pointer out of range";
+            case "overflow":
+              return "Error: Wrap-around is prohibited";
+            case "fatal":
+              return "Fatal error";
+          }
+        })();
         setRunResult({ status: "error", error });
         afterBfTerminated();
         break;
@@ -435,6 +436,7 @@ export function App() {
       arrayLength: bfRunSettings.arrayLength,
       cellType: bfRunSettings.cellType,
       encoding: bfRunSettings.encoding,
+      disableWrapAround: bfRunSettings.disableWrapAround,
     });
   };
   const stopBf = () => {

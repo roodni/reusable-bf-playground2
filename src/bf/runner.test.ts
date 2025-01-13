@@ -58,7 +58,8 @@ const testCases: TestCase[] = [
     runs: [
       { i: "9\n", o: "10" },
       { i: "65534\n", o: "65535", cellType: "uint16" },
-      { i: "65534\n", o: "255", cellType: "uint8" },
+      { i: "65534\n", o: "255", cellType: "uint8" }, // wrap-around (8bit)
+      { i: "65535\n", o: "0", cellType: "uint16" }, // wrap-around (16bit)
     ],
   },
   {
@@ -76,6 +77,11 @@ const testCases: TestCase[] = [
         encoding: Utf16Codec,
       },
     ],
+  },
+  {
+    label: "wrap-around",
+    code: "----------------------------------------------------------------------------------------------------------------------------------.",
+    runs: [{ o: "~" }],
   },
 ];
 
@@ -102,6 +108,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
         cellType: run.cellType ?? "uint8",
         arrayLength: 30000,
         encoding: run.encoding ?? Utf8Codec,
+        disableWrapAround: false,
       });
     });
     expect(output).toBe(run.o);
@@ -137,6 +144,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
         cellType: run.cellType ?? "uint8",
         arrayLength: 30000,
         encoding: run.encoding ?? Utf8Codec,
+        disableWrapAround: false,
       });
     });
     expect(output).toBe(run.o);
@@ -163,9 +171,35 @@ describe("ポインタ範囲外エラーが発生する", () => {
         cellType: "uint8",
         arrayLength: 5,
         encoding: Utf8Codec,
+        disableWrapAround: false,
       });
     });
 
+    await expect(promise).resolves.toBeUndefined();
+  });
+});
+
+describe("Wrap-around禁止", () => {
+  test.each(["-", "+[+]"])("%s", async (code) => {
+    const res = parse(code);
+    if (res.t === "error") {
+      expect.fail(res.msg);
+    }
+    const promise = new Promise<void>((resolve, reject) => {
+      const handler = (ev: RunnerEvent) => {
+        if (ev.t === "error" && ev.kind === "overflow") {
+          resolve();
+        } else {
+          reject();
+        }
+      };
+      new Runner().run(res.commands, "", handler, {
+        cellType: "uint8",
+        arrayLength: 1,
+        encoding: Utf8Codec,
+        disableWrapAround: true,
+      });
+    });
     await expect(promise).resolves.toBeUndefined();
   });
 });

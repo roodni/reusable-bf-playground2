@@ -3,6 +3,7 @@ import counter from "../assets/examples/lib/counter.bfml?raw";
 import fixedint from "../assets/examples/lib/fixedint.bfml?raw";
 import future from "../assets/examples/lib/future.bfml?raw";
 import std from "../assets/examples/lib/std.bfml?raw";
+import queens from "../assets/examples/queens.bfml?raw";
 
 export type FileSettings = {
   name: string;
@@ -40,6 +41,11 @@ let main = [
   {
     name: "future.bfml",
     code: future,
+  },
+  {
+    name: "queens",
+    code: queens,
+    input: "17\n",
   },
   {
     name: "fatal",

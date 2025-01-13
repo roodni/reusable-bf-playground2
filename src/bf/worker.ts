@@ -7,6 +7,7 @@ export type MessageToWorker =
       commands: OptimizedCommand[];
       inputs: number[];
       arrayLength: number;
+      disableWrapAround: boolean;
     }
   | {
       t: "continue";
@@ -26,7 +27,7 @@ export type MessageFromWorker =
     }
   | {
       t: "error";
-      kind: "pointer";
+      kind: "pointer" | "overflow";
     };
 
 type Stacked = {
@@ -35,28 +36,37 @@ type Stacked = {
 };
 let stack: Stacked[];
 
-let tape: Uint8Array | Uint16Array;
+let tape: number[];
 let ptr: number;
 
 let inputs: number[];
 let inputIndex: number;
+
+let bitMask: number;
+let disableWrapAround: boolean;
 
 self.addEventListener("message", (event: MessageEvent<MessageToWorker>) => {
   const message = event.data;
   // console.log(message);
   if (message.t === "start") {
     stack = [{ index: 0, commands: message.commands }];
+    tape = new Array(message.arrayLength).fill(0);
     switch (message.cellType) {
       case "uint8":
-        tape = new Uint8Array(message.arrayLength);
+        // tape = new Uint8Array(message.arrayLength);
+        bitMask = 0xff;
         break;
       case "uint16":
-        tape = new Uint16Array(message.arrayLength);
+        bitMask = 0xffff;
+        // tape = new Uint16Array(message.arrayLength);
         break;
+      default:
+        throw new Error("never");
     }
     ptr = 0;
     inputs = message.inputs;
     inputIndex = 0;
+    disableWrapAround = message.disableWrapAround;
     run();
   } else if (message.t === "continue") {
     if (message.inputs) {
@@ -91,10 +101,17 @@ function run() {
 
     const command: OptimizedCommand = stacked.commands[stacked.index];
     switch (command.t) {
-      case "add":
-        tape[ptr] += command.n;
+      case "add": {
+        const a = tape[ptr] + command.n;
+        const b = a & bitMask;
+        if (disableWrapAround && a !== b) {
+          post({ t: "error", kind: "overflow" });
+          return;
+        }
+        tape[ptr] = b;
         stacked.index++;
         break;
+      }
       case "shift":
         ptr += command.n;
         if (ptr < 0 || tape.length <= ptr) {

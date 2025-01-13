@@ -10,6 +10,7 @@ export type BfRunSettings = {
   arrayLength: number;
   cellType: CellType;
   encoding: new () => TextCodec;
+  disableWrapAround: boolean;
 };
 
 export type BfRunSettingsRef = {
@@ -24,6 +25,7 @@ export const BfRunSettingsInputs: Component<{
   let arrayLengthInput!: HTMLInputElement;
   let cellTypeSelect!: HTMLSelectElement;
   let encodingSelect!: HTMLSelectElement;
+  let disableWrapAroundCheckbox!: HTMLInputElement;
 
   createRenderEffect(() => {
     const ref = props.ref as Exclude<typeof props.ref, BfRunSettingsRef>;
@@ -53,6 +55,7 @@ export const BfRunSettingsInputs: Component<{
           arrayLength: arrayLengthInput.valueAsNumber,
           cellType: cellTypeSelect.value as CellType,
           encoding,
+          disableWrapAround: disableWrapAroundCheckbox.checked,
         };
       },
     });
@@ -61,6 +64,7 @@ export const BfRunSettingsInputs: Component<{
   const arrayLengthId = createUniqueId();
   const cellTypeId = createUniqueId();
   const encodingId = createUniqueId();
+  const disableWrapAroundId = createUniqueId();
 
   return (
     <details ref={runSettingsDetails}>
@@ -103,6 +107,19 @@ export const BfRunSettingsInputs: Component<{
                 <option value="utf-8">UTF-8</option>
                 <option value="utf-16">UTF-16</option>
               </select>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label for={disableWrapAroundId}>Disable wrap-around</label>
+            </td>
+            <td>
+              <input
+                type="checkbox"
+                ref={disableWrapAroundCheckbox}
+                id={disableWrapAroundId}
+                class="settings-checkbox"
+              />
             </td>
           </tr>
         </tbody>
