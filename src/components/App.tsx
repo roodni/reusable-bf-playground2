@@ -237,8 +237,6 @@ export function App() {
             // コンパイルに成功したら、bf実行のステータスを消す
             setRunResult({
               status: "ready",
-              error: "",
-              output: "",
             });
           }
         });
@@ -398,11 +396,22 @@ export function App() {
     }
   };
 
+  let runSettingsDetails!: HTMLDetailsElement;
+  let arrayLengthInput!: HTMLInputElement;
+
   const canRunBf = () => !isBfRunning();
   const runBf = () => {
     if (!canRunBf()) {
       return;
     }
+    const isArrayLengthValid = arrayLengthInput.checkValidity();
+    if (!isArrayLengthValid) {
+      // firefox では details が閉じていると reportValidity のメッセージが表示されないため、先に開いておく
+      runSettingsDetails.open = true;
+      arrayLengthInput.reportValidity();
+      return;
+    }
+
     setRunResult({
       status: "running",
       error: "",
@@ -427,6 +436,7 @@ export function App() {
     bfStartTime = Date.now();
     bfRunner.run(optimized, input, handleBfRunnerEvent, {
       mode: "utf8",
+      arrayLength: arrayLengthInput.valueAsNumber,
     });
   };
   const stopBf = () => {
@@ -656,20 +666,6 @@ export function App() {
             />
           </div>
 
-          <details>
-            <summary class="settings-summary">Run Settings</summary>
-            <table class="settings-table">
-              <tbody>
-                <tr>
-                  <td>Array length</td>
-                  <td>
-                    <input type="number" value="100000" disabled />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </details>
-
           <div class="inputs-container">
             <button
               ref={bfRunButton}
@@ -690,7 +686,32 @@ export function App() {
               Stop
             </button>
           </div>
+
+          <details ref={runSettingsDetails}>
+            <summary class="settings-summary">Run Settings</summary>
+            <table class="settings-table">
+              <tbody>
+                <tr>
+                  <td>
+                    <label for="settings-array-length">Array length</label>
+                  </td>
+                  <td>
+                    <input
+                      ref={arrayLengthInput}
+                      id="settings-array-length"
+                      type="number"
+                      value="30000"
+                      required
+                      min="1"
+                      max="1000000"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </details>
         </div>
+
         <div class="paragraphs-column">
           <div class="forms-column">
             <div>

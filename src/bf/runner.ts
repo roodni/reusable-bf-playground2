@@ -5,6 +5,7 @@ import BfWorker from "./worker?worker";
 export type Charset = "utf8" | "utf16";
 export type Configs = {
   mode: Charset;
+  arrayLength: number;
 };
 
 interface TextCodec {
@@ -142,12 +143,12 @@ export class Runner {
       handler({ t: "error", kind: "fatal" });
     });
 
-    const inputs = textCodec.encode(initialInput);
     const msg: MessageToWorker = {
       t: "start",
       cellType,
       commands,
-      inputs,
+      inputs: textCodec.encode(initialInput),
+      arrayLength: configs.arrayLength,
     };
     this.worker.postMessage(msg);
   }

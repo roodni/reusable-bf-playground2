@@ -60,6 +60,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
       };
       new Runner().run(commands, input, handler, {
         mode: "utf8",
+        arrayLength: 30000,
       });
     });
     expect(output).toBe(want);
@@ -91,6 +92,7 @@ describe.each(testCases)("実行できる ($label)", (tc) => {
         };
         runner.run(commands, "", handler, {
           mode: "utf8",
+          arrayLength: 30000,
         });
       });
       expect(output).toBe(want);
@@ -116,6 +118,7 @@ describe("ポインタ範囲外エラーが発生する", () => {
       };
       new Runner().run(commands, "", handler, {
         mode: "utf8",
+        arrayLength: 30000,
       });
     });
 

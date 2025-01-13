@@ -7,6 +7,7 @@ export type MessageToWorker =
       cellType: CellType;
       commands: OptimizedCommand[];
       inputs: number[];
+      arrayLength: number;
     }
   | {
       t: "continue";
@@ -35,7 +36,6 @@ type Stacked = {
 };
 let stack: Stacked[];
 
-const TapeSize = 100000;
 let tape: Uint8Array | Uint16Array;
 let ptr: number;
 
@@ -49,10 +49,10 @@ self.addEventListener("message", (event: MessageEvent<MessageToWorker>) => {
     stack = [{ index: 0, commands: message.commands }];
     switch (message.cellType) {
       case "uint8":
-        tape = new Uint8Array(TapeSize);
+        tape = new Uint8Array(message.arrayLength);
         break;
       case "uint16":
-        tape = new Uint16Array(TapeSize);
+        tape = new Uint16Array(message.arrayLength);
         break;
     }
     ptr = 0;
