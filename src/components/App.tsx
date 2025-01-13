@@ -21,6 +21,7 @@ import { FileSettings, fileSettingsList } from "../misc/fileSettings";
 import { BfmlMode } from "../misc/highlighter.js";
 import { BfRunSettingsInputs, BfRunSettingsRef } from "./BfRunSettings";
 import { CodeArea, CodeAreaRef, CodeDisplayArea } from "./CodeArea";
+import { CompileSettingsInputs, CompileSettingsRef } from "./CompileSettings";
 
 // Ace Editorの設定をここに書く
 const aceEditorOptions: Partial<ace.Ace.EditorOptions> = {
@@ -192,15 +193,15 @@ export function App() {
     stopCompile();
   };
 
-  let showLayoutCheckbox!: HTMLInputElement;
-  let optimizationLevelSelect!: HTMLSelectElement;
-  let timeoutSelect!: HTMLSelectElement;
+  let compileSettingsRef!: CompileSettingsRef;
 
   const canCompile = () => compilation.status !== "compiling";
   const compile = async () => {
     if (!canCompile()) {
       return;
     }
+
+    const settings = compileSettingsRef.values();
 
     const filename = selectingFileName();
     setCompilation({
@@ -252,16 +253,15 @@ export function App() {
 
       const abort = () => resolve(() => setCompilation({ status: "aborted" }));
       stopCompile = abort;
-      const timeout = parseInt(timeoutSelect.value);
-      if (timeout > 0) {
-        timeoutTimer = window.setTimeout(abort, timeout * 1000);
+      if (settings.timeoutMsec !== undefined) {
+        timeoutTimer = window.setTimeout(abort, settings.timeoutMsec);
       }
 
       worker.postMessage({
         files,
         entrypoint: filename,
-        showLayout: showLayoutCheckbox.checked,
-        optimize: parseInt(optimizationLevelSelect.value),
+        showLayout: settings.showLayouts,
+        optimize: settings.optimizationLevel,
         maxLength: 1000000,
       });
     });
@@ -544,55 +544,7 @@ export function App() {
           onFocusIn={() => setFocuses("bfmlSettings", true)}
           onFocusOut={() => setFocuses("bfmlSettings", false)}
         >
-          <details>
-            <summary class="settings-summary">Compilation Settings</summary>
-            <table class="settings-table">
-              <tbody>
-                <tr>
-                  <td>
-                    <label for="settings-show-layout">Show layouts</label>
-                  </td>
-                  <td>
-                    <input
-                      ref={showLayoutCheckbox}
-                      id="settings-show-layout"
-                      type="checkbox"
-                      class="settings-checkbox"
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <label for="settings-optimize">Optimization level</label>
-                  </td>
-                  <td>
-                    <select
-                      ref={optimizationLevelSelect}
-                      id="settings-optimize"
-                    >
-                      <option value="0">0 (No optimization)</option>
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3" selected>
-                        3 (Max)
-                      </option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <label for="settings-timeout">Timeout</label>
-                  </td>
-                  <td>
-                    <select ref={timeoutSelect} id="settings-timeout">
-                      <option value="5">5 s</option>
-                      <option value="0">Never</option>
-                    </select>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </details>
+          <CompileSettingsInputs ref={compileSettingsRef} />
         </div>
 
         <div
