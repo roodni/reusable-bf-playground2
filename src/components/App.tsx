@@ -6,7 +6,6 @@ import {
   createSignal,
   For,
   Match,
-  on,
   onCleanup,
   onMount,
   Show,
@@ -309,21 +308,6 @@ export function App() {
     }
     return cnt;
   });
-
-  const bfInputFromFileName = new Map<string, string>();
-  createEffect(() => {
-    // ファイルに応じて入力を変える
-    const file = selectingFile();
-    const input =
-      bfInputFromFileName.get(file.settings.name) ?? file.settings.input ?? "";
-    bfInputAreaRef.update(input);
-  });
-  createEffect(
-    on(bfInput, (input) => {
-      // 入力をファイルごとに保存しておく
-      bfInputFromFileName.set(selectingFileName(), input);
-    }),
-  );
 
   // 実行
   let bfRunner = new BfRunner.Runner();
