@@ -331,6 +331,14 @@ export function App() {
   });
 
   const isBfRunning = () => runResult.status === "running";
+  createEffect(() => {
+    const editor = bfmlEditor();
+    const compiling = compilation.status === "compiling";
+    if (!editor) {
+      return;
+    }
+    editor.setReadOnly(compiling);
+  });
 
   const afterBfTerminated = () => {
     setRunResult({
@@ -496,7 +504,9 @@ export function App() {
           </select>
           <button
             class="input"
-            disabled={!selectingFile().isChanged}
+            disabled={
+              !selectingFile().isChanged || compilation.status === "compiling"
+            }
             onClick={handleResetClick}
           >
             Reset
@@ -531,7 +541,10 @@ export function App() {
           onFocusIn={() => setFocuses("bfmlSettings", true)}
           onFocusOut={() => setFocuses("bfmlSettings", false)}
         >
-          <CompileSettingsInputs ref={compileSettingsRef} />
+          <CompileSettingsInputs
+            ref={compileSettingsRef}
+            disabled={compilation.status === "compiling"}
+          />
         </div>
 
         <div

@@ -12,6 +12,7 @@ export type CompileSettingsRef = {
 
 export const CompileSettingsInputs: Component<{
   ref?: Ref<CompileSettingsRef>;
+  disabled: boolean;
 }> = (props) => {
   let showLayoutCheckbox!: HTMLInputElement;
   let optimizationLevelSelect!: HTMLSelectElement;
@@ -50,6 +51,7 @@ export const CompileSettingsInputs: Component<{
                 id={showLayoutsId}
                 type="checkbox"
                 class="settings-checkbox"
+                disabled={props.disabled}
               />
             </td>
           </tr>
@@ -58,7 +60,11 @@ export const CompileSettingsInputs: Component<{
               <label for={optimizationLevelId}>Optimization level</label>
             </td>
             <td>
-              <select ref={optimizationLevelSelect} id={optimizationLevelId}>
+              <select
+                ref={optimizationLevelSelect}
+                id={optimizationLevelId}
+                disabled={props.disabled}
+              >
                 <option value="0">0 (No optimization)</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -73,7 +79,11 @@ export const CompileSettingsInputs: Component<{
               <label for={timeoutId}>Timeout</label>
             </td>
             <td>
-              <select ref={timeoutSelect} id={timeoutId}>
+              <select
+                ref={timeoutSelect}
+                id={timeoutId}
+                disabled={props.disabled}
+              >
                 <option value="5">5 s</option>
                 <option value="0">Never</option>
               </select>
