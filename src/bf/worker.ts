@@ -154,7 +154,13 @@ function run() {
               post({ t: "error", kind: "pointer" });
               return;
             }
-            tape[p] += n * coef;
+            const a = tape[p] + n * coef;
+            const b = a & bitMask;
+            if (disableWrapAround && a !== b) {
+              post({ t: "error", kind: "overflow" });
+              return;
+            }
+            tape[p] = b;
           }
           tape[ptr] = 0;
         }

@@ -83,6 +83,11 @@ const testCases: TestCase[] = [
     code: "----------------------------------------------------------------------------------------------------------------------------------.",
     runs: [{ o: "~" }],
   },
+  {
+    label: "最適化されたループのwrap-around",
+    code: "+++++ +++++ +++++ [- > +++++ +++++ +++++ ++ <] + > [-<+>] < [+++++ +++++  +++++ +++++  +++++ +++++ +++ .[-]]",
+    runs: [{ o: "" }, { o: "!", cellType: "uint16" }],
+  },
 ];
 
 describe.each(testCases)("実行できる ($label)", (tc) => {
@@ -180,26 +185,29 @@ describe("ポインタ範囲外エラーが発生する", () => {
 });
 
 describe("Wrap-around禁止", () => {
-  test.each(["-", "+[+]"])("%s", async (code) => {
-    const res = parse(code);
-    if (res.t === "error") {
-      expect.fail(res.msg);
-    }
-    const promise = new Promise<void>((resolve, reject) => {
-      const handler = (ev: RunnerEvent) => {
-        if (ev.t === "error" && ev.kind === "overflow") {
-          resolve();
-        } else {
-          reject();
-        }
-      };
-      new Runner().run(res.commands, "", handler, {
-        cellType: "uint8",
-        arrayLength: 1,
-        encoding: Utf8Codec,
-        disableWrapAround: true,
+  test.each(["-", "+[+]", "+++++ +++++ +++++ + [-> +++++ +++++ +++++ + <]"])(
+    "%s",
+    async (code) => {
+      const res = parse(code);
+      if (res.t === "error") {
+        expect.fail(res.msg);
+      }
+      const promise = new Promise<void>((resolve, reject) => {
+        const handler = (ev: RunnerEvent) => {
+          if (ev.t === "error" && ev.kind === "overflow") {
+            resolve();
+          } else {
+            reject();
+          }
+        };
+        new Runner().run(res.commands, "", handler, {
+          cellType: "uint8",
+          arrayLength: 30000,
+          encoding: Utf8Codec,
+          disableWrapAround: true,
+        });
       });
-    });
-    await expect(promise).resolves.toBeUndefined();
-  });
+      await expect(promise).resolves.toBeUndefined();
+    },
+  );
 });
