@@ -20,6 +20,7 @@ export type BfRunSettingsRef = {
 
 export const BfRunSettingsInputs: Component<{
   ref?: Ref<BfRunSettingsRef>;
+  disabled: boolean;
 }> = (props) => {
   let runSettingsDetails!: HTMLDetailsElement;
   let arrayLengthInput!: HTMLInputElement;
@@ -31,6 +32,9 @@ export const BfRunSettingsInputs: Component<{
     const ref = props.ref as Exclude<typeof props.ref, BfRunSettingsRef>;
     ref?.({
       reportValidity() {
+        if (props.disabled) {
+          throw new Error("reportValidity は disabled のとき使えない");
+        }
         const isArrayLengthValid = arrayLengthInput.checkValidity();
         if (isArrayLengthValid) {
           return true;
@@ -84,6 +88,7 @@ export const BfRunSettingsInputs: Component<{
                 required
                 min="1"
                 max="1000000"
+                disabled={props.disabled}
               />
             </td>
           </tr>
@@ -92,7 +97,11 @@ export const BfRunSettingsInputs: Component<{
               <label for={cellTypeId}>Cell type</label>
             </td>
             <td>
-              <select id={cellTypeId} ref={cellTypeSelect}>
+              <select
+                id={cellTypeId}
+                ref={cellTypeSelect}
+                disabled={props.disabled}
+              >
                 <option value="uint8">8bit (0-255)</option>
                 <option value="uint16">16bit (0-65536)</option>
               </select>
@@ -103,7 +112,11 @@ export const BfRunSettingsInputs: Component<{
               <label for={encodingId}>Encoding</label>
             </td>
             <td>
-              <select id={encodingId} ref={encodingSelect}>
+              <select
+                id={encodingId}
+                ref={encodingSelect}
+                disabled={props.disabled}
+              >
                 <option value="utf-8">UTF-8</option>
                 <option value="utf-16">UTF-16</option>
               </select>
@@ -119,6 +132,7 @@ export const BfRunSettingsInputs: Component<{
                 ref={disableWrapAroundCheckbox}
                 id={disableWrapAroundId}
                 class="settings-checkbox"
+                disabled={props.disabled}
               />
             </td>
           </tr>

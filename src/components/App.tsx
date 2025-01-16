@@ -623,7 +623,10 @@ export function App() {
             </button>
           </div>
 
-          <BfRunSettingsInputs ref={bfRunSettingsRef} />
+          <BfRunSettingsInputs
+            ref={bfRunSettingsRef}
+            disabled={isBfRunning()}
+          />
         </div>
 
         <div class="paragraphs-column">
