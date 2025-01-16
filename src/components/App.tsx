@@ -238,6 +238,8 @@ export function App() {
             // コンパイルに成功したら、bf実行のステータスを消す
             setRunResult({
               status: "ready",
+              error: "",
+              output: "",
             });
           }
         });
