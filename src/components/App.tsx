@@ -194,7 +194,7 @@ export function App() {
 
   let compileSettingsRef!: CompileSettingsRef;
 
-  const canCompile = () => compilation.status !== "compiling";
+  const canCompile = () => compilation.status !== "compiling" && !isBfRunning();
   const compile = async () => {
     if (!canCompile()) {
       return;
@@ -587,7 +587,7 @@ export function App() {
               onUpdate={_setBfCode}
               onInput={handleBfAreaInput}
               defaultValue={bfCode()}
-              disabled={compilation.status === "compiling"}
+              disabled={compilation.status === "compiling" || isBfRunning()}
             />
           </div>
 
@@ -598,7 +598,7 @@ export function App() {
               ref={bfInputAreaRef}
               onUpdate={_setBfInput}
               defaultValue={bfInput()}
-              readonly={isBfRunning()}
+              disabled={isBfRunning()}
             />
           </div>
 
