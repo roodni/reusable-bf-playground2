@@ -322,9 +322,6 @@ export function App() {
   });
 
   // 実行
-  let bfRunner = new BfRunner.Runner();
-  let bfStartTime = 0;
-
   type RunResult = {
     status: "ready" | "running" | "finished" | "error" | "aborted";
     isInputRequired: boolean;
@@ -345,10 +342,14 @@ export function App() {
     const t = (runResult.elapsedTime / 1000).toFixed(1) + "s";
     return runResult.additionalInputUsed ? `${t} with input wait` : t;
   };
-
   const isBfRunning = () => runResult.status === "running";
 
+  let bfRunner = new BfRunner.Runner();
+  let bfStartTime = 0;
+  let bfTimer: number | undefined;
+
   const afterBfTerminated = () => {
+    window.clearTimeout(bfTimer);
     setRunResult({
       isInputRequired: false,
       elapsedTime: Date.now() - bfStartTime,
@@ -417,6 +418,10 @@ export function App() {
       additionalInputUsed: false,
       elapsedTime: 0,
     });
+    bfStartTime = Date.now();
+    bfTimer = window.setInterval(() => {
+      setRunResult({ elapsedTime: Date.now() - bfStartTime });
+    }, 1000);
 
     const code = bfCode();
     const parseResult = BfParser.parse(code);
@@ -432,7 +437,6 @@ export function App() {
     const optimized = BfOptimizer.optimize(parseResult.commands);
     // const optimized = parseResult.commands;
     const input = bfInput();
-    bfStartTime = Date.now();
     bfRunner.run(optimized, input, handleBfRunnerEvent, {
       arrayLength: bfRunSettings.arrayLength,
       cellType: bfRunSettings.cellType,
@@ -666,7 +670,7 @@ export function App() {
                   ⏸️ Additional input required
                 </Match>
                 <Match when={runResult.status === "running"}>
-                  ⌛ Running ...
+                  ⌛ Running ... ({(runResult.elapsedTime / 1000).toFixed(0)}s)
                 </Match>
                 <Match when={runResult.status === "finished"}>
                   ✅ Run finished ({bfElapsedTimeResultText()})
