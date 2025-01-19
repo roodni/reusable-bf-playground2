@@ -404,7 +404,7 @@ export function App() {
 
   let bfRunSettingsRef!: BfRunSettingsRef;
 
-  const canRunBf = () => !isBfRunning();
+  const canRunBf = () => !isBfRunning() && bfCodeSize() !== 0;
   const runBf = () => {
     if (!canRunBf()) {
       return;
@@ -609,8 +609,7 @@ export function App() {
           </div>
 
           <div>
-            <label for="bf-code">brainf**k</label>
-            <Show when={bfCodeSize() >= 1}> ({bfCodeSize()} commands)</Show>
+            <label for="bf-code">brainf**k</label> ({bfCodeSize()} commands)
             <CodeArea
               id="bf-code"
               ref={bfAreaRef}
