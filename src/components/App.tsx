@@ -187,6 +187,16 @@ export function App() {
   });
   const compilingSec = () => compilation.elapsedTime / 1000;
 
+  // コンパイル中はエディタをreadonlyにする
+  createEffect(() => {
+    const editor = bfmlEditor();
+    const compiling = compilation.status === "compiling";
+    if (!editor) {
+      return;
+    }
+    editor.setReadOnly(compiling);
+  });
+
   let stopCompile = () => {};
   const handleStopCompileButtonClick = () => {
     stopCompile();
@@ -337,14 +347,6 @@ export function App() {
   };
 
   const isBfRunning = () => runResult.status === "running";
-  createEffect(() => {
-    const editor = bfmlEditor();
-    const compiling = compilation.status === "compiling";
-    if (!editor) {
-      return;
-    }
-    editor.setReadOnly(compiling);
-  });
 
   const afterBfTerminated = () => {
     setRunResult({
