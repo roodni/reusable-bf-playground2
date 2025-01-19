@@ -558,10 +558,7 @@ export function App() {
           onFocusIn={() => setFocuses("bfmlSettings", true)}
           onFocusOut={() => setFocuses("bfmlSettings", false)}
         >
-          <CompileSettingsInputs
-            ref={compileSettingsRef}
-            disabled={compilation.status === "compiling"}
-          />
+          <CompileSettingsInputs ref={compileSettingsRef} disabled={false} />
         </div>
 
         <div
@@ -616,7 +613,8 @@ export function App() {
               onUpdate={_setBfCode}
               onInput={handleBfAreaInput}
               defaultValue={bfCode()}
-              disabled={compilation.status === "compiling" || isBfRunning()}
+              disabled={compilation.status === "compiling"}
+              readonly={isBfRunning()}
             />
           </div>
 
@@ -627,7 +625,7 @@ export function App() {
               ref={bfInputAreaRef}
               onUpdate={_setBfInput}
               defaultValue={bfInput()}
-              disabled={isBfRunning()}
+              readonly={isBfRunning()}
             />
           </div>
 
@@ -652,10 +650,7 @@ export function App() {
             </button>
           </div>
 
-          <BfRunSettingsInputs
-            ref={bfRunSettingsRef}
-            disabled={isBfRunning()}
-          />
+          <BfRunSettingsInputs ref={bfRunSettingsRef} disabled={false} />
         </div>
 
         <div class="paragraphs-column">
