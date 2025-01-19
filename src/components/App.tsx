@@ -331,6 +331,10 @@ export function App() {
     output: "",
     elapsedTime: 0,
   });
+  const bfElapsedTimeResultText = () => {
+    const t = (runResult.elapsedTime / 1000).toFixed(1) + "s";
+    return runResult.additionalInputUsed ? `${t} with input wait` : t;
+  };
 
   const isBfRunning = () => runResult.status === "running";
   createEffect(() => {
@@ -409,6 +413,7 @@ export function App() {
       error: "",
       output: "",
       additionalInputUsed: false,
+      elapsedTime: 0,
     });
 
     const code = bfCode();
@@ -662,14 +667,14 @@ export function App() {
                   ⌛ Running ...
                 </Match>
                 <Match when={runResult.status === "finished"}>
-                  ✅ Run finished
-                  <Show when={!runResult.additionalInputUsed}>
-                    {" "}
-                    ({(runResult.elapsedTime / 1000).toFixed(1)} s)
-                  </Show>
+                  ✅ Run finished ({bfElapsedTimeResultText()})
                 </Match>
-                <Match when={runResult.status === "error"}>❌ Run failed</Match>
-                <Match when={runResult.status === "aborted"}>❌ Aborted</Match>
+                <Match when={runResult.status === "error"}>
+                  ❌ Run failed ({bfElapsedTimeResultText()})
+                </Match>
+                <Match when={runResult.status === "aborted"}>
+                  ❌ Run aborted ({bfElapsedTimeResultText()})
+                </Match>
               </Switch>
             </div>
             <Show when={runResult.error !== ""}>
