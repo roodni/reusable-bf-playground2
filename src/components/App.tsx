@@ -304,8 +304,8 @@ export function App() {
   // インタプリタに関すること
   //
   let bfInputAreaRef!: CodeAreaRef;
-  let bfRunButton!: HTMLButtonElement;
   let bfInteractiveInputRef!: HTMLInputElement;
+  let bfOutputElement!: HTMLPreElement;
 
   // 入力
   const [bfInput, _setBfInput] = createSignal("");
@@ -359,9 +359,10 @@ export function App() {
     });
     bfRunner = new BfRunner.Runner();
     if (!focuses.run) {
-      // フォーカスがない場合、実行ボタンにフォーカスする
+      // フォーカスがない場合 (=~ 実行ボタンを押してdisabledでフォーカスが消えた場合)、出力エリアにフォーカスする。
+      // 出力がすべて画面内に入るようにするため。
       // Ctrl + Enterで実行する場合はフォーカスが残るので、例えばInputを編集しながら連続で実行することができる
-      bfRunButton.focus();
+      bfOutputElement.focus();
     }
   };
   const handleBfRunnerEvent = (ev: BfRunner.RunnerEvent) => {
@@ -630,12 +631,7 @@ export function App() {
           </div>
 
           <div class="inputs-container">
-            <button
-              ref={bfRunButton}
-              class="input expand"
-              onClick={runBf}
-              disabled={!canRunBf()}
-            >
+            <button class="input expand" onClick={runBf} disabled={!canRunBf()}>
               {"Run "}
               <CtrlEnterText
                 disabled={ctrlEnterAction() !== "run" || !canRunBf()}
@@ -697,6 +693,7 @@ export function App() {
             <CodeDisplayArea
               code={runResult.output}
               cursor={isBfRunning() ? "zerowidth" : "eof"}
+              ref={bfOutputElement}
             />
           </div>
 

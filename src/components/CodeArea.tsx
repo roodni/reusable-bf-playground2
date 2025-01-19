@@ -65,6 +65,7 @@ export const CodeDisplayArea: Component<{
   code: string;
   variant?: "normal" | "error";
   cursor?: "none" | "eof" | "zerowidth";
+  ref?: Ref<HTMLPreElement>;
 }> = (_props) => {
   const props = mergeProps({ variant: "normal", cursor: "none" }, _props);
   return (
@@ -75,6 +76,8 @@ export const CodeDisplayArea: Component<{
         [`code-display-area-variant-${props.variant}`]: true,
         [`code-display-area-cursor-${props.cursor}`]: true,
       }}
+      tabindex={0}
+      ref={props.ref}
     >
       {props.code}
     </pre>

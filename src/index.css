@@ -218,9 +218,17 @@ h1.header-title {
   border-color: lightgray;
   background-color: whitesmoke;
   overflow-y: scroll;
+
+  /* &:focus {
+    border-color: darkgray;
+  } */
 }
 
 .code-display-area-variant-error {
   border-color: lightgray;
   background-color: pink;
+
+  /* &:focus {
+    border-color: darkgray;
+  } */
 }
