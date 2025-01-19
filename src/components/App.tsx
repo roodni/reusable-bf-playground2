@@ -22,6 +22,8 @@ import { BfRunSettingsInputs, BfRunSettingsRef } from "./BfRunSettings";
 import { CodeArea, CodeAreaRef, CodeDisplayArea } from "./CodeArea";
 import { CompileSettingsInputs, CompileSettingsRef } from "./CompileSettings";
 
+import("ace-builds/src-noconflict/ext-searchbox"); // ext-searchboxは使用時に初めて参照されるので、動的importでチャンクサイズを減らしてみる
+
 // Ace Editorの設定をここに書く
 const aceEditorOptions: Partial<ace.Ace.EditorOptions> = {
   fontSize: 16,
