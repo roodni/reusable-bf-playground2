@@ -342,7 +342,8 @@ export function App() {
   });
   const bfElapsedTimeResultText = () => {
     const t = (runResult.elapsedTime / 1000).toFixed(1) + "s";
-    return runResult.additionalInputUsed ? `${t} with input wait` : t;
+    return t;
+    // return runResult.additionalInputUsed ? `${t} with input wait` : t;
   };
   const isBfRunning = () => runResult.status === "running";
 
@@ -459,7 +460,8 @@ export function App() {
     }
     const i = bfInteractiveInputRef.value + "\n";
     bfInteractiveInputRef.value = "";
-    setRunResult({ isInputRequired: false });
+    setRunResult("output", (s) => s + i);
+    setRunResult("isInputRequired", false);
     bfRunner.input(i);
   };
   const handleSubmitBfInteractiveInput = (ev: SubmitEvent) => {
@@ -694,6 +696,10 @@ export function App() {
 
           <div>
             Output
+            <Show when={!isBfRunning() && runResult.additionalInputUsed}>
+              {" "}
+              (with Additional Input)
+            </Show>
             <CodeDisplayArea
               code={runResult.output}
               cursor={isBfRunning() ? "zerowidth" : "eof"}
