@@ -570,7 +570,7 @@ export function App() {
           onFocusOut={() => setFocuses("run", false)}
         >
           <div class="forms-column">
-            <div>
+            <div class="status">
               <Switch>
                 <Match when={compilation.status === "ready"}>
                   🟦 Ready to compile
@@ -660,7 +660,7 @@ export function App() {
 
         <div class="paragraphs-column">
           <div class="forms-column">
-            <div>
+            <div class="status">
               <Switch>
                 <Match when={runResult.status === "ready"}>
                   🟦 Ready to run
