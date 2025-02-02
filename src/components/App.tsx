@@ -422,10 +422,6 @@ export function App() {
       additionalInputUsed: false,
       elapsedTime: 0,
     });
-    bfStartTime = Date.now();
-    bfTimer = window.setInterval(() => {
-      setRunResult({ elapsedTime: Date.now() - bfStartTime });
-    }, 1000);
 
     const code = bfCode();
     const parseResult = BfParser.parse(code);
@@ -437,6 +433,11 @@ export function App() {
       });
       return;
     }
+
+    bfStartTime = Date.now();
+    bfTimer = window.setInterval(() => {
+      setRunResult({ elapsedTime: Date.now() - bfStartTime });
+    }, 1000);
 
     const optimized = BfOptimizer.optimize(parseResult.commands);
     // const optimized = parseResult.commands;
