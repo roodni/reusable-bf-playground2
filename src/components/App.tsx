@@ -462,7 +462,6 @@ export function App() {
       return;
     }
     const lines = input.split("\n");
-    console.log(lines);
     if (lines.length >= 2) {
       bfAdditionalInputRef.value = lines.pop()!;
       const i = lines.join("\n") + "\n";
@@ -482,7 +481,6 @@ export function App() {
     const clip = ev.clipboardData?.getData("text/plain") ?? "";
     const start = bfAdditionalInputRef.selectionStart;
     const end = bfAdditionalInputRef.selectionEnd;
-    console.log(clip, start, end);
     if (!clip.includes("\n") || start === null || end === null) {
       return;
     }
