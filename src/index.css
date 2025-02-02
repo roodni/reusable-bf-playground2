@@ -1,8 +1,8 @@
 /* 小規模だからCSSは一枚でいいかと思った */
 :root {
   --form-gap: 4px;
-  --para-gap: 8px;
-  --sec-gap: 40px;
+  --paragraphs-gap: 8px;
+  --sections-gap: 40px;
 }
 
 body {
@@ -23,6 +23,9 @@ body {
   > .left {
     grid-area: l;
   }
+  > .middle {
+    grid-area: m;
+  }
   > .right {
     grid-area: r;
   }
@@ -36,17 +39,13 @@ body {
 
     display: grid;
     grid-template-areas:
-      "h h"
-      "l r";
+      "h h h"
+      "l m r";
     grid-template-rows: max-content 1fr;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr max-content 1fr;
 
-    > .left {
-      height: 100%;
-      overflow-y: hidden;
-    }
     > .right {
-      height: 100%;
+      /* これがないと左エリアが右につられて縦に伸びる */
       overflow-y: auto;
     }
   }
@@ -72,6 +71,8 @@ body {
 /* 内装 */
 .app {
   > .header {
+    padding: var(--form-gap);
+
     border-bottom-width: 1px;
     border-bottom-style: dotted;
     border-bottom-color: gray;
@@ -82,19 +83,20 @@ body {
     column-gap: 8px;
   }
   > .left {
+    padding: var(--form-gap);
+
     display: grid;
     grid-template-rows: max-content 1fr max-content;
     gap: var(--form-gap);
+  }
+  > .right {
+    padding: var(--form-gap);
   }
 }
 
 h1.header-title {
   font-size: 1.4rem;
   margin: 0;
-}
-
-.pad {
-  padding: var(--form-gap);
 }
 
 .input {
@@ -119,13 +121,13 @@ h1.header-title {
 .sections-column {
   display: flex;
   flex-direction: column;
-  gap: var(--sec-gap);
+  gap: var(--sections-gap);
 }
 
 .paragraphs-column {
   display: flex;
   flex-direction: column;
-  gap: var(--para-gap);
+  gap: var(--paragraphs-gap);
 }
 
 .forms-column {

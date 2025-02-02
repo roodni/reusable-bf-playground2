@@ -512,7 +512,7 @@ export function App() {
   return (
     <div class="app" onKeyDown={handleCtrlEnter}>
       {/* ヘッダー */}
-      <div class="header pad">
+      <div class="header">
         <h1 class="header-title">Reusable-bf Playground</h1>
         <div>
           🔗
@@ -524,7 +524,7 @@ export function App() {
 
       {/* 左 */}
       <div
-        class="left pad"
+        class="left"
         onFocusIn={() => setFocuses("bfml", true)}
         onFocusOut={() => setFocuses("bfml", false)}
       >
@@ -574,9 +574,8 @@ export function App() {
           </button>
         </div>
       </div>
-
       {/* 右 */}
-      <div class="right pad sections-column">
+      <div class="right sections-column">
         <div
           class="paragraphs-column"
           onFocusIn={() => setFocuses("bfmlSettings", true)}
