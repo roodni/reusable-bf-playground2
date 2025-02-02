@@ -52,6 +52,10 @@ export function App() {
     bfml: false,
     bfmlSettings: false,
     run: false,
+
+    // 以下は run に包含される
+    runSettings: false,
+    runInput: false,
   });
   const ctrlEnterAction = () => {
     if (focuses.bfml || focuses.bfmlSettings) {
@@ -239,6 +243,8 @@ export function App() {
     let timeoutTimer: number | undefined;
     const callback = await new Promise<() => void>((resolve) => {
       worker.addEventListener("message", (res) => {
+        // focuses を見ていることで reactivity で怒られるが、べつにリアクティブにしたいわけじゃないので問題ない
+        // eslint-disable-next-line solid/reactivity
         resolve(() => {
           bfAreaRef.update(res.data.out);
           const succeed: boolean = res.data.success;
@@ -253,6 +259,11 @@ export function App() {
               error: "",
               output: "",
             });
+          }
+          if (succeed && !focuses.bfmlSettings) {
+            // フォーカスが設定エリアになければ、bf実行ボタンにフォーカスする
+            // 設定を変えながら連続で実行したい場合を考慮
+            bfRunButton.focus();
           }
         });
       });
@@ -304,6 +315,7 @@ export function App() {
   // インタプリタに関すること
   //
   let bfInputAreaRef!: CodeAreaRef;
+  let bfRunButton!: HTMLButtonElement;
   let bfAdditionalInputRef!: HTMLInputElement;
   let bfOutputElement!: HTMLElement;
 
@@ -358,10 +370,9 @@ export function App() {
       elapsedTime: Date.now() - bfStartTime,
     });
     bfRunner = new BfRunner.Runner();
-    if (!focuses.run) {
-      // フォーカスがない場合 (=~ 実行ボタンを押してdisabledでフォーカスが消えた場合)、出力エリアにフォーカスする。
+    if (!focuses.runInput && !focuses.runSettings) {
+      // フォーカスが、連続で実行したそうな場所 (入力とかsettingsとか）にない場合は出力エリアにフォーカスする。
       // 出力がすべて画面内に入るようにするため。
-      // Ctrl + Enterで実行する場合はフォーカスが残るので、例えばInputを編集しながら連続で実行することができる
       bfOutputElement.focus();
     }
   };
@@ -696,7 +707,10 @@ export function App() {
             />
           </div>
 
-          <div>
+          <div
+            onFocusIn={() => setFocuses("runInput", true)}
+            onFocusOut={() => setFocuses("runInput", false)}
+          >
             <label for="bf-input">Input</label> ({bfInputLines()} lines)
             <CodeArea
               id="bf-input"
@@ -708,7 +722,12 @@ export function App() {
           </div>
 
           <div class="inputs-container">
-            <button class="input expand" onClick={runBf} disabled={!canRunBf()}>
+            <button
+              class="input expand"
+              onClick={runBf}
+              disabled={!canRunBf()}
+              ref={bfRunButton}
+            >
               {"Run "}
               <CtrlEnterText
                 disabled={ctrlEnterAction() !== "run" || !canRunBf()}
@@ -723,7 +742,12 @@ export function App() {
             </button>
           </div>
 
-          <BfRunSettingsInputs ref={bfRunSettingsRef} disabled={false} />
+          <div
+            onFocusIn={() => setFocuses("runSettings", true)}
+            onFocusOut={() => setFocuses("runSettings", false)}
+          >
+            <BfRunSettingsInputs ref={bfRunSettingsRef} disabled={false} />
+          </div>
         </div>
 
         <div class="paragraphs-column">
