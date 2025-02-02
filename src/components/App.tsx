@@ -304,7 +304,7 @@ export function App() {
   // インタプリタに関すること
   //
   let bfInputAreaRef!: CodeAreaRef;
-  let bfInteractiveInputRef!: HTMLInputElement;
+  let bfAdditionalInputRef!: HTMLInputElement;
   let bfOutputElement!: HTMLPreElement;
 
   // 入力
@@ -372,7 +372,7 @@ export function App() {
           isInputRequired: true,
           additionalInputUsed: true,
         });
-        bfInteractiveInputRef.focus();
+        bfAdditionalInputRef.focus();
         break;
       case "output": {
         // メモリ食いつぶし防止のため、出力文字数には制限を設ける
@@ -455,19 +455,42 @@ export function App() {
       afterBfTerminated();
     }
   };
-  const submitBfInteractiveInput = () => {
+
+  // 追加入力を送信する。ただし、最後の改行より後の文字は送信しない
+  const submitBfAdditionalInput = (input: string) => {
     if (isBfRunning() && !runResult.isInputRequired) {
       return;
     }
-    const i = bfInteractiveInputRef.value + "\n";
-    bfInteractiveInputRef.value = "";
-    setRunResult("output", (s) => s + i);
-    setRunResult("isInputRequired", false);
-    bfRunner.input(i);
+    const lines = input.split("\n");
+    console.log(lines);
+    if (lines.length >= 2) {
+      bfAdditionalInputRef.value = lines.pop()!;
+      const i = lines.join("\n") + "\n";
+      setRunResult("output", (s) => s + i);
+      setRunResult("isInputRequired", false);
+      bfRunner.input(i);
+    }
   };
-  const handleSubmitBfInteractiveInput = (ev: SubmitEvent) => {
-    submitBfInteractiveInput();
+
+  const handleSubmitBfAdditionalInput = (ev: SubmitEvent) => {
+    submitBfAdditionalInput(bfAdditionalInputRef.value + "\n");
     ev.preventDefault();
+  };
+
+  const handlePasteOnAdditionalInput = (ev: ClipboardEvent) => {
+    // 改行を含む文字列のペーストを扱えるようにする
+    const clip = ev.clipboardData?.getData("text/plain") ?? "";
+    const start = bfAdditionalInputRef.selectionStart;
+    const end = bfAdditionalInputRef.selectionEnd;
+    console.log(clip, start, end);
+    if (!clip.includes("\n") || start === null || end === null) {
+      return;
+    }
+    ev.preventDefault();
+    const current = bfAdditionalInputRef.value;
+    const left = current.slice(0, start);
+    const right = current.slice(end);
+    submitBfAdditionalInput(left + clip + right);
   };
 
   // キーボードショートカット
@@ -698,14 +721,15 @@ export function App() {
           </div>
 
           <Show when={isBfRunning() && runResult.additionalInputUsed}>
-            <form onSubmit={handleSubmitBfInteractiveInput}>
+            <form onSubmit={handleSubmitBfAdditionalInput}>
               {/* 複数行のコピペに対応したい */}
               <label for="interactive-input">Additional Input</label>
               <div class="inputs-container">
                 <input
                   id="interactive-input"
                   type="text"
-                  ref={bfInteractiveInputRef}
+                  ref={bfAdditionalInputRef}
+                  onPaste={handlePasteOnAdditionalInput}
                   disabled={!runResult.isInputRequired}
                   spellcheck={false}
                   autocomplete="off"
