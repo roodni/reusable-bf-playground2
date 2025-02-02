@@ -509,8 +509,58 @@ export function App() {
     }
   };
 
+  // 左右リサイズ
+  const [resizing, setResizing] = createStore({
+    isResizing: false,
+    left: 1,
+    right: 1,
+  });
+  const handleResizerMouseDown = (_ev: MouseEvent) => {
+    setResizing("isResizing", true);
+
+    // ドラッグの暴発を無理矢理封じる
+    window.getSelection()?.removeAllRanges();
+  };
+  const handleMouseMove = (ev: MouseEvent) => {
+    const w = document.body.clientWidth;
+    const x = ev.clientX;
+    if (!resizing.isResizing || w < 1) {
+      return;
+    }
+    ev.preventDefault();
+    let ratio = (x / w) * 100;
+    ratio = Math.max(ratio, 10);
+    ratio = Math.min(ratio, 90);
+
+    setResizing({
+      left: ratio,
+      right: 100 - ratio,
+    });
+    bfmlEditor()?.resize();
+  };
+  const handleMouseUp = (_ev: MouseEvent) => {
+    setResizing("isResizing", false);
+  };
+
+  window.addEventListener("mousemove", handleMouseMove);
+  window.addEventListener("mouseup", handleMouseUp);
+  onCleanup(() => {
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("mouseup", handleMouseUp);
+  });
+
   return (
-    <div class="app" onKeyDown={handleCtrlEnter}>
+    <div
+      class="app"
+      classList={{
+        "app-resizing": resizing.isResizing,
+      }}
+      onKeyDown={handleCtrlEnter}
+      style={{
+        "--left-width": `${resizing.left}fr`,
+        "--right-width": `${resizing.right}fr`,
+      }}
+    >
       {/* ヘッダー */}
       <div class="header">
         <h1 class="header-title">Reusable-bf Playground</h1>
@@ -574,6 +624,12 @@ export function App() {
           </button>
         </div>
       </div>
+
+      {/* 左右幅変更仕切り */}
+      <div class="middle">
+        <div class="resizer" onMouseDown={handleResizerMouseDown} />
+      </div>
+
       {/* 右 */}
       <div class="right sections-column">
         <div

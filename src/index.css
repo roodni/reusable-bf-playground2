@@ -1,8 +1,11 @@
 /* 小規模だからCSSは一枚でいいかと思った */
-:root {
+.app {
   --form-gap: 4px;
   --paragraphs-gap: 8px;
   --sections-gap: 40px;
+
+  --left-width: 1fr;
+  --right-width: 1fr;
 }
 
 body {
@@ -34,7 +37,6 @@ body {
 @media screen and (min-width: 601px) {
   /* PC */
   .app {
-    width: 100%;
     height: 100svh;
 
     display: grid;
@@ -42,7 +44,12 @@ body {
       "h h h"
       "l m r";
     grid-template-rows: max-content 1fr;
-    grid-template-columns: 1fr max-content 1fr;
+    grid-template-columns: var(--left-width) max-content var(--right-width);
+
+    > .left {
+      /* 限界を超えて幅を狭められるように */
+      overflow-x: auto;
+    }
 
     > .right {
       /* これがないと左エリアが右につられて縦に伸びる */
@@ -62,8 +69,13 @@ body {
       "l"
       "r";
     grid-template-rows: max-content max-content;
+
     .editor {
       height: 50svh;
+    }
+
+    > .middle {
+      display: none;
     }
   }
 }
@@ -82,6 +94,7 @@ body {
     align-items: center;
     column-gap: 8px;
   }
+
   > .left {
     padding: var(--form-gap);
 
@@ -89,9 +102,35 @@ body {
     grid-template-rows: max-content 1fr max-content;
     gap: var(--form-gap);
   }
+
+  > .middle {
+    --margin: 2px;
+
+    position: relative;
+    width: 1px;
+    margin: 0 var(--margin);
+    border-left-width: 1px;
+    border-left-style: dotted;
+    border-left-color: gray;
+
+    > .resizer {
+      position: absolute;
+      top: 0;
+      left: calc(var(--form-gap) * -1 - 1px - var(--margin));
+      width: calc(var(--form-gap) * 2 + 1px + var(--margin) * 2);
+      height: 100%;
+      cursor: col-resize;
+    }
+  }
+
   > .right {
     padding: var(--form-gap);
   }
+}
+
+.app-resizing {
+  /* リサイズ中の選択暴発を封じる */
+  user-select: none;
 }
 
 h1.header-title {
