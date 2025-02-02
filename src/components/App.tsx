@@ -305,7 +305,7 @@ export function App() {
   //
   let bfInputAreaRef!: CodeAreaRef;
   let bfAdditionalInputRef!: HTMLInputElement;
-  let bfOutputElement!: HTMLPreElement;
+  let bfOutputElement!: HTMLElement;
 
   // 入力
   const [bfInput, _setBfInput] = createSignal("");

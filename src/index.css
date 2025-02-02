@@ -204,6 +204,9 @@ h1.header-title {
 .code-display-area {
   margin: 0;
   max-height: 70svh;
+  &:focus {
+    outline: auto;
+  }
 }
 
 .code-display-area-cursor-eof::after {
@@ -218,17 +221,9 @@ h1.header-title {
   border-color: lightgray;
   background-color: whitesmoke;
   overflow-y: scroll;
-
-  /* &:focus {
-    border-color: darkgray;
-  } */
 }
 
 .code-display-area-variant-error {
   border-color: lightgray;
   background-color: pink;
-
-  /* &:focus {
-    border-color: darkgray;
-  } */
 }
